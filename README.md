@@ -12,15 +12,14 @@ RhythmTag는 YouTube 링크를 기반으로 사용자가 노래를 추천하고,
 - YouTube 링크를 통한 노래 공유
 - 태그 기반 곡 분류 및 탐색
 - 댓글, 좋아요 기능
-- 모바일 반응형 UI
-
+- 팔로잉, 팔로워 기능
 ---
 
 ## 2️⃣ 기술 스택
 - **Frontend:** HTML, CSS, JavaScript (Vanilla / Bootstrap)
 - **Backend:** Python, Django
 - **Database:** PostgreSQL
-- **Etc:** GitHub, Figma, YouTube API
+- **Etc:** GitHub, Figma,
 
 ---
 
@@ -50,6 +49,8 @@ python manage.py runserver
 ---
 
 # 5️⃣ ERD
+![image](https://github.com/user-attachments/assets/2c8e41ce-32a4-48fe-8c98-7a0579c18a01)
+
 
 ---
 
@@ -73,11 +74,11 @@ gantt
     ERD/Wireframe 설계      :a2, 2025-07-02, 1d
 
     section 백엔드 개발 (Django / PostgreSQL / Python)
-    Django 프로젝트 생성   :b1, 2025-07-03, 0.5d
-    회원가입/로그인 구현    :b2, 2025-07-03, 0.5d
-    게시글 CRUD            :b3, 2025-07-04, 1d
-    댓글/좋아요/태그        :b4, 2025-07-05, 1d
-    API / URL 구성          :b5, 2025-07-06, 0.5d
+    Django 프로젝트 생성   :b1, 2025-07-02, 0.5d
+    회원가입/로그인 구현    :b2, 2025-07-02, 0.5d
+    게시글 CRUD            :b3, 2025-07-02, 1d
+    댓글/좋아요/태그        :b4, 2025-07-02, 1d
+    API / URL 구성          :b5, 2025-07-02, 0.5d
 
     section 프론트엔드 개발 (HTML / CSS / JS)
     기본 레이아웃 + 메인피드 :c1, 2025-07-03, 0.5d
