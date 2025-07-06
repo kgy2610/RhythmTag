@@ -181,6 +181,8 @@ python manage.py migrate
 - Django 5.x를 사용한다면 Summnernote 대신 CKEditor를 사용하는 것이 현명한 선택
 - 호환성 문제 없이 안정적으로 리치텍스트 에디터 기능을 구현할 수 있음
 
+---
+
 ## 2. 커스텀 User와 auth.User 
 **[ 문제 상황 ]**
 기존 auth.User를 커스텀 User로 변경 시도 중 다음과 같은 문제 발생 :
