@@ -248,6 +248,7 @@ AUTH_USER_MODEL = 'accounts.User'
 ```
 
 3️⃣ 마이그레이션 진행
+
 ``python manage.py makemigrations accounts``
 
 ``python manage.py makemigrations blog``
