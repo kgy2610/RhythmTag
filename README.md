@@ -101,20 +101,26 @@ gantt
 ---
 
 # 🔟 트러블슈팅
+
 ## 1. Django 5.x와 summnernote 호환성 문제
+
 **[ 문제 상황 ]**
+
 Django 5.x 버전에서 django-summernote 사용 시 호환성 문제로 인한 오류 발생
 
 **[ 원인 분석 ]**
+
 1. 버전 호환성
 - django-summernote는 Django 5.x의 변경사항을 완전히 지원하지 않음.
 - Django 5.0에서 변경된 내부 API와 충돌 발생
 - 특히 미디어 파일 처리, URL 패턴, 미들웨어 관련 호환성 이슈
+
 2. 일반적인 오류
 - JavaScript 로딩 불가능
 - CSRF 토큰 관련 문제
 
 **[ 해결 방법 ]**
+
 ✅ CKEditor로 마이그레이션
 1. summernote 제거
 ``pip uninstall django-summernote``
@@ -178,7 +184,9 @@ python manage.py migrate
 ```
 
 **[ 결론 ]**
+
 - Django 5.x를 사용한다면 Summnernote 대신 CKEditor를 사용하는 것이 현명한 선택
+
 - 호환성 문제 없이 안정적으로 리치텍스트 에디터 기능을 구현할 수 있음
 
 ---
@@ -186,6 +194,7 @@ python manage.py migrate
 ## 2. 커스텀 User와 auth.User 
 
 **[ 문제 상황 ]**
+
 기존 auth.User를 커스텀 User로 변경 시도 중 다음과 같은 문제 발생 :
 - 기존 테이블들이 auth.User를 외래키(ForeignKey)로 참조하고 있어 스키마 변경 충돌 발생
 - 마이그레이션 충돌, 데이터 무결성 오류 발생
@@ -207,28 +216,42 @@ python manage.py migrate
 **[ 해결 방법 ]**
 
 ✅ DB 재생성 및 커스텀 User 적용
+
 1️⃣ 기존 데이터베이스 삭제
+
 ``cd "C:\Program Files\PostgreSQL\17\bin"``
+
 PostgreSQL bin 디렉토리로 이동
+
 ``.\psql.exe -U postgres -d postgres``
+
 postgres 데이터 베이스 연결
-```SELECT pg_terminate_backend(pid)
+```
+SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity
 WHERE datname = 'blog_project' AND pid <> pg_backend_pid();
 ```
+
 해당 데이터 베이스와의 모든 연결 강제 종료
+
 ``DROP DATABASE blog_project;``
+
 기존 데이터베이스 삭제
 
 2️⃣ 새로운 데이터베이스 생성
+
 ``CREATE DATABASE blog_project;``
+
 ```python
 setting.py 수정
 AUTH_USER_MODEL = 'accounts.User'
 ```
+
 3️⃣ 마이그레이션 진행
 ``python manage.py makemigrations accounts``
+
 ``python manage.py makemigrations blog``
+
 ``python manage.py migrate``
 
 
