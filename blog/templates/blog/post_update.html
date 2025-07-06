@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 수정</title>
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+        <link rel="stylesheet" href="{% static 'blog/css/post_update.css' %}">
+</head>
+<body>
+    <header>
+        <div id="header">
+            <div id="logo">
+                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
+            </div>
+            <div class="menu">
+                <div id="user">
+                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
+                </div>
+                <div id="menu">
+                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
+                </div>
+            </div>
+        </div>
+        <hr>
+    </header>
+
+    <div id="title-update">
+        <p>#게시글 수정</p>
+    </div>
+
+    <section>
+        {{ form.media }}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div id="update-title" class="form-group">
+                <label for="{{ form.title.id_for_label }}"></label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div id="update-content" class="form-group">
+                <label for="{{ form.content.id_for_label }}"></label>
+                {{ form.content }}
+                {{ form.content.errors }}
+            </div>
+
+            <div id="update-link" class="form-group">
+                <label for="{{ form.link.id_for_label }}">유튜브 링크 수정 : </label>
+                {{ form.link }}
+                {{ form.link.errors }}
+            </div>
+
+            <div id="update-tag" class="form-group">
+                <label for="{{ form.tag_input.id_for_label }}">태그 수정 : </label>
+                {{ form.tag_input }}
+                {{ form.tag_input.errors }}
+            </div>
+
+            <div id="update-btn">
+                <button type="submit">수정 완료</button>
+            </div>
+        </form>
+    </section>
+</body>
+</html>

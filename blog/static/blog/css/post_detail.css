@@ -1,0 +1,205 @@
+#header{
+    width: 100%; height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* background-color: green; */
+    /* border-bottom: 2px solid #7C3AED; */
+}
+#logo > img{
+    width: 166px; height: 80px;
+    float: left;
+    margin: 10px;
+    margin-left: 120px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+header > hr{
+    width: 1720px;
+    border: #7C3AED 1px solid;
+}
+.menu{
+    width: 140px; height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-right: 120px;
+    line-height: 60px;
+    /* background-color: green; */
+}
+.menu #user img{
+    float: left;
+    width: 50px; height: 50px;
+    cursor: pointer;
+    /* background-color: yellow; */
+}
+.menu #menu img{
+    float: right;
+    width: 50px; height: 50px;
+    cursor: pointer;
+    /* background-color: yellow; */
+}
+
+/* --------------------------------------- */
+#back-button{
+    display: flex;
+    margin-left: 100px;
+}
+#back-button a{
+    text-decoration: none;
+    color: #7C3AED;
+}
+#back-button a:hover{
+    text-decoration: underline;
+}
+section{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1440px; height: fit-content;
+    margin: 0 auto;
+}
+.post-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1200px;height: fit-content;
+}
+#content-title{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 1000px; height: 100px;
+    margin-top: 20px;
+    font-size: 30px;
+    font-weight: bold;
+    border-bottom: 2px solid #C084FC;
+    border-top: 2px solid #C084FC;
+}
+#content-link{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1000px; height: 400px;
+    margin-top: 20px;
+    border-bottom: 2px solid #C084FC;
+    border-top: 2px solid #C084FC;
+}
+#content-text{
+    width: 1000px; height: fit-content;
+    margin-top: 20px;
+    padding: 20px 0;
+    padding-left: 10px;
+    text-align: left;
+    border-bottom: 2px solid #C084FC;
+    border-top: 2px solid #C084FC;
+    box-sizing: border-box;
+}
+#content-tags{
+    display: flex;
+    align-items: center;
+    width: 1000px; height: 80px;
+    margin-top: 20px;
+    border-bottom: 2px solid #C084FC;
+    border-top: 2px solid #C084FC;
+    cursor: pointer;
+    padding-left: 10px;
+    box-sizing: border-box;
+}
+#content-tags p{
+    margin-right: 20px;
+    padding: 5px 30px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: #7C3AED;
+}
+
+/* --------------------------------------- */
+
+.content-reaction{
+    width: 1000px; height: 50px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    box-sizing: border-box;
+}
+#reply-count{
+    width: 120px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px;
+    padding-left: 15px;
+}
+.content-option{
+    width: 120px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px;
+    padding-right: 10px;
+}
+.content-option a{
+    text-decoration: none;
+    color: #000;
+}
+.content-option a:hover{
+    text-decoration: underline;
+}
+
+/* --------------------------------------- */
+
+.comment-area{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1000px;
+    /* background-color: green; */
+}
+#comment-input{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1000px; height: 50px;
+    margin-top: 20px;
+    border-bottom: 2px solid #C084FC;
+    border-top: 2px solid #C084FC;
+}
+#comment-input input[type="text"]{
+    width: 700px; height: 30px;
+    padding-left: 10px;
+    border: none;
+    font-size: 18px;
+    background-color: whitesmoke;
+}
+#comment-input input[type="text"]:focus{
+    outline: none;
+}
+.comment-reply{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1000px; height: 50px;
+    font-size: 18px;
+    margin-top: 20px;
+    border-radius: 10px;
+    background-color: #F3E8FF;
+}
+#user-name{
+    width: fit-content;
+    text-align: center;
+    font-weight: bold;
+    margin-left: 10px;
+}
+#user-content{
+    width: 700px;
+    text-align: center;
+}
+#user-writeDate{
+    width: fit-content;
+    text-align: center;
+    margin-right: 10px;
+}

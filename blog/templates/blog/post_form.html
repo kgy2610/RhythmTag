@@ -1,0 +1,106 @@
+<!-- blog/templates/blog/post_form.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 작성</title>
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/css/post_form.css' %}">
+</head>
+<body>
+    <header>
+        <div id="header">
+            <div id="logo">
+                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
+            </div>
+            <div class="menu">
+                <div id="user">
+                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
+                </div>
+                <div id="menu">
+                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
+                </div>
+            </div>
+        </div>
+        <hr>
+    </header>
+
+    <div id="title-write">
+        <p>#새 글 쓰기</p>
+    </div>
+    {% if messages %}
+        <div id="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="padding: 10px; margin: 10px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section>
+        {{ form.media }}
+        <form method="post" enctype="multipart/form-data" id="postForm">
+            {% csrf_token %}
+
+            <div id="write-title" class="form-group">
+                <label for="{{ form.title.id_for_label }}">제목 : </label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div id="write-content" class="form-group">
+                <label for="{{ form.content.id_for_label }}"></label>
+                {{ form.content }}
+                {{ form.content.errors }}
+            </div>
+
+            <div id="write-link" class="form-group">
+                <label for="{{ form.link.id_for_label }}">유튜브 링크 : </label>
+                {{ form.link }}
+                {{ form.link.errors }}
+            </div>
+
+            <div id="write-tag" class="form-group">
+                <label for="{{ form.tag_input.id_for_label }}">태그 수정 : </label>
+                {{ form.tag_input }}
+                {{ form.tag_input.errors }}
+                <small>{{ form.tag_input.help_text }}</small>
+            </div>
+            <div id="write-btn">
+                <button type="submit">작성 완료</button>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사용자 인증 상태 확인
+            const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+            
+            console.log('페이지 로드됨. 인증 상태:', isAuthenticated);
+            
+            // 폼 요소 확인
+            const form = document.getElementById('postForm');
+            
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('폼 제출 이벤트 발생!');
+                    
+                    // 로그인하지 않은 경우에만 막기
+                    if (!isAuthenticated) {
+                        e.preventDefault();
+                        alert('로그인이 필요합니다.');
+                        window.location.href = "{% url 'login' %}";  // 또는 "/accounts/login/"
+                        return false;
+                    }
+                    
+                    // 로그인한 경우는 일반 폼 제출 진행
+                    console.log('폼 제출 진행');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>메인 페이지</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/login.css' %}">
+</head>
+<body>
+    <div class="main-title">
+        <img src="{% static 'accounts/images/logo.png' %}" alt="RhythmTag">
+        <h1>#LOGIN</h1>
+    </div>
+    
+    <div id="main-login">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="login-option">
+                <p class="login-label"> {{ form.id.label }} </p>
+                <p>
+                    {{ form.id }}
+                    {{ form.id.errors }}
+                </p>
+            </div>
+            <div class="login-option">
+                <p class="login-label"> {{ form.password.label }} </p>
+                <p>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </p>
+            </div>
+            <div class="login-option buttons">
+                <button type="submit">로그인</button>
+            </div>
+        </form>
+    </div>
+    <div id="register-btn">
+        <a href="{% url 'register' %}">회원가입</a>
+    </div>
+</body>
+</html>

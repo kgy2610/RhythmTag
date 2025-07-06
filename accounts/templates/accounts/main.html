@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>메인 페이지</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/main.css' %}">
+</head>
+<body>
+    <div class="main-title">
+        <img src="{% static 'accounts/images/logo.png' %}" alt="RhythmTag">
+        <h1>#RhythmTag</h1>
+    </div>
+    
+    <div id="main-enter">
+        <a href="/blog/">블로그 입장하기</a>
+    </div>
+    <div class="account-con">
+        <div id="main-login">
+            <a href="{% url 'login' %}">로그인</a>
+        </div>
+        <div id="register">
+            <a href="{% url 'register' %}">회원가입</a>
+        </div>
+    </div>
+</body>
+</html>

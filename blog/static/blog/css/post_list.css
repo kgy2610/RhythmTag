@@ -1,0 +1,165 @@
+#header{
+    width: 100%; height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* background-color: green; */
+    /* border-bottom: 2px solid #7C3AED; */
+}
+#logo > img{
+    width: 166px; height: 80px;
+    float: left;
+    margin: 10px;
+    margin-left: 120px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+header > hr{
+    width: 1720px;
+    border: #7C3AED 1px solid;
+}
+.menu{
+    width: 140px; height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-right: 120px;
+    line-height: 60px;
+    /* background-color: green; */
+}
+.menu #user img{
+    float: left;
+    width: 50px; height: 50px;
+    cursor: pointer;
+    /* background-color: yellow; */
+}
+.menu #menu img{
+    float: right;
+    width: 50px; height: 50px;
+    cursor: pointer;
+    /* background-color: yellow; */
+}
+
+/* --------------------------------------- */
+
+.search-bar{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    width: 1440px; height: 70px;
+    /* background-color: #7C3AED; */
+}
+.search-bar > input{
+    width: 800px; height: 50px;
+    border-radius: 10px;
+    border: 1px solid #7C3AED;
+    padding-left: 10px;
+    
+}
+
+/* --------------------------------------- */
+
+.blog-name{
+    font-size: 30px;
+    font-weight: bold;
+}
+
+/* --------------------------------------- */
+
+#category{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.category-btn{
+    width: 440px; height: 60px;
+    margin-left: 295px;
+    line-height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* background-color: green; */
+}
+.category-btn input[type="radio"]{
+    display: none;
+}
+.category-btn input[type="radio"]:checked + label {
+    background-color: #C084FC;
+    color: #fff;
+}
+.category-btn label{
+    width: 100px; height: 50px;
+    padding: 0 15px;
+    border-bottom: 1px solid #7C3AED;
+    border-top: 1px solid #7C3AED;
+    cursor: pointer;
+}
+.write{
+    margin-right: 250px;
+    padding-top: 10px;
+    cursor: pointer;
+}
+.write p a{
+    color: #000;
+    text-decoration: none;
+}
+.write p a:hover{
+    text-decoration: underline;
+}
+
+/* --------------------------------------- */
+
+#post-list{
+    margin: 0 auto;
+    margin-top: 30px;
+    width: 1400px;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-content: flex-start;
+}
+.post-card{
+    width: 310px; height: 500px;
+    text-align: left;
+    margin-left: 40px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    border-bottom: 1px solid #7C3AED;
+    border-top: 1px solid #7C3AED;
+    cursor: pointer;
+}
+.post-card a{
+    text-decoration: none;
+    color: #000;
+}
+.post-card:hover{
+    background-color: #F3E8FF;
+}
+.post-card #thumnail{
+    width: 310px; height: 310px;
+    margin-top: 20px;
+    background-color: whitesmoke;
+}
+.post-card #thumnail img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.post-card #info, #post-content, #tags{
+    padding-left: 10px;
+    margin-top: 20px;
+}
+.post-card #info{
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+.post-card #info #likes{
+    margin-right: 10px;
+}
+.post-card #post-content{
+    height: 50px;
+}

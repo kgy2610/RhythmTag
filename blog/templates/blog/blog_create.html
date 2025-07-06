@@ -1,0 +1,54 @@
+<!-- blog/templates/blog/blog_create.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>블로그 생성</title>
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+</head>
+<body>
+    <header>
+        <div id="header">
+            <div id="logo">
+                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
+            </div>
+            <div class="menu">
+                <div id="user">
+                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
+                </div>
+                <div id="menu">
+                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
+                </div>
+            </div>
+        </div>
+        <hr>
+    </header>
+
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h2>블로그 생성하기</h2>
+        <p>나만의 블로그를 만들어보세요!</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px;">블로그 생성하기</button>
+                <a href="{% url 'post_list' %}" style="margin-left: 10px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">취소</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>메인 페이지</title>
+    <link rel="stylesheet" href="{% static 'accounts/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/register.css' %}">
+</head>
+<body>
+    <div class="main-title">
+        <img src="{% static 'accounts/images/logo.png' %}" alt="RhythmTag">
+        <h1>#REGISTER</h1>
+    </div>
+
+    <div id="main-register">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.id.label }} </p>
+                <p>
+                    {{ form.id }}
+                    {{ form.id.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.password.label }} </p>
+                <p>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.name.label }} </p>
+                <p>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.phone.label }} </p>
+                <p>
+                    {{ form.phone }}
+                    {{ form.phone.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.nickname.label }} </p>
+                <p>
+                    {{ form.nickname }}
+                    {{ form.nickname.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <button type="submit">회원가입</button>
+            </div>
+        </form>
+    </div>
+    <div id="login-btn">
+        <a href="{% url 'login' %}">로그인</a>
+    </div>
+    </body>
+</html>

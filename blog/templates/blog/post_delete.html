@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }}</title>
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/css/post_delete.css' %}">
+</head>
+<body>
+    <header>
+        <div id="header">
+            <div id="logo">
+                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
+            </div>
+            <div class="menu">
+                <div id="user">
+                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
+                </div>
+                <div id="menu">
+                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
+                </div>
+            </div>
+        </div>
+        <hr>
+    </header>
+    <div id="delete-tag">
+        <h1>#게시글 삭제</h1>
+    </div>
+    <div id="delete-img">
+        <img src="{% static '/blog/images/post_delete_dance.jpg' %}" alt="댄스 이미지">
+    </div>
+    <div id="delete-msg">
+        <p>정말 이 게시글을 <a>삭제</a>하시겠습니까?</p>
+        <p>삭제 후 <a>복구할 수 없습니다<a></p>
+    </div>
+    <div id="delete-title">
+            <p><strong>{{ object.title }}</strong></p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">삭제</button>
+        <button type="button" onclick="window.location.href='{% url 'post_detail' object.pk %}'">
+            돌아가기
+        </button>
+    </form>
+</body>
+</html>

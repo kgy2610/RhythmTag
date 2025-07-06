@@ -1,0 +1,9 @@
+body{
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+    overflow-x: hidden;
+    margin: 0 auto;
+    background-color: whitesmoke;
+}
