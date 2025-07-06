@@ -19,7 +19,7 @@
 
 
 #main-register{
-    width: 600px; height: 400px;
+    width: 600px; height: 460px;
     margin: 0 auto;
     font-size: 20px;
     border-bottom: 2px solid #C084FC;
@@ -46,14 +46,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 420px; height: 60px;
+    width: 500px; height: 60px;
 }
 .regs-option .regs-label {
     text-align: right;
     margin-right: 20px;
-    width: 100px;
+    width: 130px;
 }
-#id_name, #id_email, #id_phone, #id_password, #id_nickname{
+#id_userid, #id_password1, #id_password2, #id_name, #id_email, #id_phone, #id_password, #id_nickname{
     width: 300px; height: 40px;
     border: none;
     padding-left: 10px;

@@ -17,10 +17,10 @@
         <form method="post" novalidate>
             {% csrf_token %}
             <div class="login-option">
-                <p class="login-label"> {{ form.id.label }} </p>
+                <p class="login-label"> {{ form.userid.label }} </p>
                 <p>
-                    {{ form.id }}
-                    {{ form.id.errors }}
+                    {{ form.userid }}
+                    {{ form.userid.errors }}
                 </p>
             </div>
             <div class="login-option">

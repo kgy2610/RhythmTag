@@ -17,17 +17,24 @@
         <form method="post" novalidate>
             {% csrf_token %}
             <div class="regs-option">
-                <p class="regs-label"> {{ form.id.label }} </p>
+                <p class="regs-label"> {{ form.userid.label }} </p>
                 <p>
-                    {{ form.id }}
-                    {{ form.id.errors }}
+                    {{ form.userid }}
+                    {{ form.userid.errors }}
                 </p>
             </div>
             <div class="regs-option">
-                <p class="regs-label"> {{ form.password.label }} </p>
+                <p class="regs-label"> {{ form.password1.label }} </p>
                 <p>
-                    {{ form.password }}
-                    {{ form.password.errors }}
+                    {{ form.password1 }}
+                    {{ form.password1.errors }}
+                </p>
+            </div>
+            <div class="regs-option">
+                <p class="regs-label"> {{ form.password2.label }} </p>
+                <p>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
                 </p>
             </div>
             <div class="regs-option">
