@@ -184,6 +184,7 @@ python manage.py migrate
 ---
 
 ## 2. 커스텀 User와 auth.User 
+
 **[ 문제 상황 ]**
 기존 auth.User를 커스텀 User로 변경 시도 중 다음과 같은 문제 발생 :
 - 기존 테이블들이 auth.User를 외래키(ForeignKey)로 참조하고 있어 스키마 변경 충돌 발생
@@ -191,6 +192,7 @@ python manage.py migrate
 - 프로젝트가 정상 구동되지 않음
 
 **[ 원인 분석 ]**
+
 1️⃣ Django User 모델 변경의 특성
 - Django의 User 모델은 프로젝트 생성 직후에 커스터마이징 해야함.
 - 이미 auth.User를 참조하는 테이블이 생성된 이후 변경하면, DB 구조상 큰 충돌과 무결성 문제 발생
@@ -203,6 +205,7 @@ python manage.py migrate
 - 기존 데이터가 auth.User와 연결되어 있어 커스텀 User로 변경 불가
 
 **[ 해결 방법 ]**
+
 ✅ DB 재생성 및 커스텀 User 적용
 1️⃣ 기존 데이터베이스 삭제
 ``cd "C:\Program Files\PostgreSQL\17\bin"``
