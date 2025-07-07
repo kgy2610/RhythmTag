@@ -2,6 +2,8 @@
 
 from django import forms
 from .models import Post, Tag, PostTag
+from django.contrib import messages
+from django.db import transaction
 
 class PostForm(forms.ModelForm):
     tag_input = forms.CharField(
@@ -16,7 +18,7 @@ class PostForm(forms.ModelForm):
     
     class Meta:
         model = Post
-        fields = ['title', 'content', 'link', 'status']
+        fields = ['title', 'content', 'link']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -29,10 +31,7 @@ class PostForm(forms.ModelForm):
             }),
             'link': forms.URLInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'https://www.youtube.com/watch?v=...'
-            }),
-            'status': forms.Select(attrs={
-                'class': 'form-control'
+                'placeholder': '링크를 입력하세요'
             })
         }
     
@@ -53,16 +52,41 @@ class PostForm(forms.ModelForm):
         
         return tags
 
+    @transaction.atomic  # 추가: 트랜잭션 보장
     def save(self, commit=True):
+        print("=== PostForm.save() 호출 ===")  # 추가: 디버깅 로그
+        
         instance = super().save(commit=commit)
+        print(f"게시글 저장됨: {instance}")  # 추가
+        
         if commit:
-            # 기존 태그 관계 제거
-            instance.tags.clear()
-            
-            # 새 태그 추가
-            tags = self.cleaned_data.get('tag_input', [])
-            for tag_name in tags:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                PostTag.objects.create(post=instance, tag=tag)
+            try:
+                # 수정: through 모델 사용 시 직접 PostTag 테이블 조작
+                PostTag.objects.filter(post=instance).delete()
+                print("기존 태그 연결 삭제 완료")  # 추가
+                
+                # 새 태그 추가
+                tags = self.cleaned_data.get('tag_input', [])
+                print(f"처리할 태그들: {tags}")  # 추가
+                
+                for tag_name in tags:
+                    if tag_name:  # 추가: 빈 태그명 제외
+                        tag, created = Tag.objects.get_or_create(name=tag_name)
+                        PostTag.objects.create(post=instance, tag=tag)
+                        print(f"태그 연결 완료: {tag.name}")  # 추가
+                
+                print("모든 태그 처리 완료")  # 추가
+                
+            except Exception as e:
+                print(f"태그 처리 중 오류: {e}")  # 추가
+                raise  # 오류를 다시 발생시켜서 트랜잭션 롤백
         
         return instance
+    
+    def form_invalid(self, form):
+        print(f"Form errors: {form.errors}")
+        print(f"Form data: {form.data}")
+        for field, errors in form.errors.items():
+            print(f"Field '{field}': {errors}")
+        messages.error(self.request, f'폼 오류: {form.errors}')
+        return super().form_invalid(form)

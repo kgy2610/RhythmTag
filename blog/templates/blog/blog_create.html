@@ -29,26 +29,77 @@
         <h2>블로그 생성하기</h2>
         <p>나만의 블로그를 만들어보세요!</p>
         
+        <!-- 추가: 로그인하지 않은 사용자에게 보여줄 메시지 -->
+        {% if not user.is_authenticated %}
+        <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0;">🔒 블로그 생성을 위해 로그인이 필요합니다</h4>
+            <p style="margin: 0 0 15px 0;">아래 양식을 미리 확인해보시고, 로그인 후 블로그를 생성해보세요!</p>
+            <a href="{% url 'login' %}" style="padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">로그인하러 가기</a>
+        </div>
+        {% endif %}
+        
         <form method="post">
             {% csrf_token %}
             
             <div style="margin-bottom: 20px;">
-                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                {{ form.title }}
-                {{ form.title.errors }}
+                <!-- 수정: 필드명을 blog_name으로 변경 -->
+                <label for="id_blog_name">블로그 이름 *</label>
+                <input type="text" 
+                       name="blog_name" 
+                       id="id_blog_name" 
+                       placeholder="예: 홍길동의 일상 블로그" 
+                       required
+                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;{% if not user.is_authenticated %} background-color: #f8f9fa; cursor: not-allowed;{% endif %}"
+                       {% if not user.is_authenticated %}readonly{% endif %}>
+                <small style="color: #6c757d;">다른 사용자들이 보게 될 블로그 이름입니다.</small>
+                <!-- 폼 에러 표시 -->
+                {% if form.blog_name.errors %}
+                    <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                        {{ form.blog_name.errors }}
+                    </div>
+                {% endif %}
             </div>
             
             <div style="margin-bottom: 20px;">
-                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                {{ form.description }}
-                {{ form.description.errors }}
+                <!-- 수정: 필드명을 description으로 유지 -->
+                <label for="id_description">블로그 소개</label>
+                <textarea name="description" 
+                          id="id_description" 
+                          rows="3" 
+                          placeholder="블로그에 대한 간단한 소개를 작성해주세요."
+                          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;{% if not user.is_authenticated %} background-color: #f8f9fa; cursor: not-allowed;{% endif %}"
+                          {% if not user.is_authenticated %}readonly{% endif %}></textarea>
+                <!-- 폼 에러 표시 -->
+                {% if form.description.errors %}
+                    <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
             </div>
             
             <div style="margin-bottom: 20px;">
-                <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px;">블로그 생성하기</button>
+                <!-- 수정: 로그인 상태에 따라 다른 버튼 표시 -->
+                {% if user.is_authenticated %}
+                    <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🎉 블로그 생성하기
+                    </button>
+                {% else %}
+                    <button type="button" 
+                            onclick="location.href='{% url 'login' %}'" 
+                            style="padding: 10px 20px; background-color: #6c757d; color: white; border: 1px solid #6c757d; border-radius: 4px; cursor: pointer;">
+                        🔐 로그인 후 블로그 생성하기
+                    </button>
+                {% endif %}
                 <a href="{% url 'post_list' %}" style="margin-left: 10px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">취소</a>
             </div>
         </form>
+        
+        <!-- 추가: 비로그인 사용자를 위한 추가 안내 -->
+        {% if not user.is_authenticated %}
+        <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; text-align: center;">
+            <p style="margin: 0; color: #6c757d;">계정이 없으시다면 <a href="{% url 'register' %}" style="color: #007bff; text-decoration: none;">회원가입</a>을 먼저 해주세요.</p>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

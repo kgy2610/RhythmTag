@@ -8,9 +8,9 @@ urlpatterns = [
     path('', views.PostListView.as_view(), name='post_list'),
     path('post/write/', views.PostWriteView.as_view(), name='post_write'),
     path('post/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
-    path('post/<int:pk>/edit/', views.PostUpdateView.as_view(), name='post_edit'),
+    path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post_update'),
     path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
     
     # 블로그 관련
-    path('blog/create/', views.BlogCreateView.as_view(), name='blog_create'),
+    path('create/', views.BlogCreateView.as_view(), name='blog_create'),
 ]

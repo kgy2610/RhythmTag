@@ -95,6 +95,22 @@
                         window.location.href = "{% url 'login' %}";  // 또는 "/accounts/login/"
                         return false;
                     }
+
+                    // 폼 데이터 검증
+                    const title = document.querySelector('input[name="title"]').value;
+                    const content = document.querySelector('textarea[name="content"]').value;
+                    
+                    if (!title.trim()) {
+                        e.preventDefault();
+                        alert('제목을 입력해주세요.');
+                        return false;
+                    }
+                    
+                    if (!content.trim()) {
+                        e.preventDefault();
+                        alert('내용을 입력해주세요.');
+                        return false;
+                    }
                     
                     // 로그인한 경우는 일반 폼 제출 진행
                     console.log('폼 제출 진행');

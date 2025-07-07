@@ -24,6 +24,19 @@ class Blog(models.Model):
         verbose_name = '블로그'
         verbose_name_plural = '블로그'
 
+    @classmethod
+    def user_has_blog(cls, user):
+        # 사용자가 블로그를 가지고 있는지 확인
+        return cls.objects.filter(author=user).exists()
+    
+    @classmethod
+    def get_user_blog(cls, user):
+        # 사용자의 블로그 반환
+        try:
+            return cls.objects.get(author=user)
+        except cls.DoesNotExist:
+            return None
+
 class Tag(models.Model):
     # 태그 정보
     name = models.CharField(max_length=50, unique=True, verbose_name='태그 이름')
@@ -52,8 +65,8 @@ class Post(models.Model):
     )
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, verbose_name='블로그')
     link = models.URLField(blank=True, verbose_name='유튜브 링크')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published', verbose_name='상태')
     tags = models.ManyToManyField(Tag, through='PostTag', blank=True, verbose_name='태그')
+    view_count = models.PositiveIntegerField(default=0, verbose_name='조회수')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -80,11 +93,10 @@ class Post(models.Model):
     def like_count(self):
         return self.likes.count()
     
-    @property
-    def view_count(self):
-        # view_count 필드가 없으므로 property로 처리하거나 필드 추가 필요
-        return getattr(self, '_view_count', 0)
-    
+    def increment_view_count(self):
+        self.view_count += 1
+        self.save(update_fields=['view_count'])
+
     class Meta:
         verbose_name = '게시글'
         verbose_name_plural = '게시글'

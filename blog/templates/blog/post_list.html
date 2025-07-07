@@ -3,99 +3,166 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-    <head>
-        <meta charset="UTF-8" />
-        <title>RhythmTag</title>
-        <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
-        <link rel="stylesheet" href="{% static 'blog/css/post_list.css' %}">
-    </head>
-    <body>
-        {% if user.is_authenticated and not user_has_blog %}
-            <div style="text-align: center; padding: 40px; background-color: #f8f9fa; margin: 20px 0; border-radius: 8px;">
-                <h3>블로그가 없습니다</h3>
+<head>
+    <meta charset="UTF-8">
+    <title>RhythmTag - 블로그</title>
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/css/post_list.css' %}">
+</head>
+<body>
+    <header>
+        <div id="header">
+            <div id="logo">
+                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag" onclick="location.href='{% url 'post_list' %}'">
+            </div>
+            <div class="menu">
+                <div id="user">
+                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
+                </div>
+                <div id="menu">
+                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
+                </div>
+            </div>
+        </div>
+        <hr>
+    </header>
+
+    <!-- 메시지 표시 -->
+    {% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            {{ message }}
+            <button class="message-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 검색창 -->
+    <div class="search-bar">
+        <form method="get">
+            <input type="text" name="search" value="{{ request.GET.search }}" 
+                   placeholder="검색어를 입력하세요(제목, 태그)">
+            <input type="hidden" name="filter" value="{{ current_filter }}">
+        </form>
+    </div>
+
+    <!-- 블로그 이름 -->
+    <div style="text-align: center; margin: 30px 0;">
+        <h2 class="blog-name">{{ blog_name }}</h2>
+    </div>
+
+    <!-- 카테고리 메뉴와 새 글 쓰기 -->
+    <div id="category">
+        <div class="category-btn">
+            <input type="radio" id="my" name="filter" {% if current_filter == 'my' %}checked{% endif %}>
+            <label for="my" onclick="location.href='?filter=my'">내가 작성한 글</label>
+            
+            <input type="radio" id="follow" name="filter" {% if current_filter == 'follow' %}checked{% endif %}>
+            <label for="follow" onclick="location.href='?filter=follow'">팔로워/팔로잉</label>
+            
+            <input type="radio" id="famous" name="filter" {% if current_filter == 'famous' %}checked{% endif %}>
+            <label for="famous" onclick="location.href='?filter=famous'">인기가 많은 글</label>
+        </div>
+        <div class="write">
+            <p><a href="{% url 'post_write' %}">새 글 쓰기</a></p>
+        </div>
+    </div>
+
+    <!-- 게시글 목록 또는 안내 메시지 -->
+    {% if current_filter == 'my' and user.is_authenticated %}
+        <!-- "내가 작성한 글" 탭 -->
+        {% if not user_has_blog %}
+            <!-- 블로그가 없는 경우 -->
+            <div class="no-content-message">
+                <h3>블로그가 없습니다.</h3>
                 <p>나만의 블로그를 만들어 글을 작성해보세요!</p>
-                <a href="{% url 'blog_create' %}" style="padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 16px;">블로그 생성하기</a>
+                <a href="{% url 'blog_create' %}" class="create-blog-btn">📝 블로그 생성하기</a>
             </div>
-        {% endif %}
-        
-        <header>
-            <div id="header">
-                <div id="logo">
-                    <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
-                </div>
-                <div class="menu">
-                    <div id="user">
-                        <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
-                    </div>
-                    <div id="menu">
-                        <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
-                    </div>
-                </div>
+        {% elif not posts %}
+            <!-- 블로그는 있지만 내가 쓴 글이 없는 경우 -->
+            <div class="no-content-message">
+                <h3>아직 작성한 글이 없습니다.</h3>
+                <p>첫 번째 글을 작성해보세요!</p>
+                <a href="{% url 'post_write' %}" class="write-first-btn">✏️ 첫 번째 글 작성하기</a>
             </div>
-            <hr>
-        </header>
-
-        <div class="search-bar">
-            <input type="text" placeholder="검색어를 입력하세요(제목, 태그)">
-        </div>
-
-        <div class="blog-name">
-            {% if user.is_authenticated and user_has_blog %}
-                <p>#{{ user_blog.blog_name }}</p>
-            {% else %}
-                <p>#내 블로그 이름</p>
-            {% endif %}
-        </div>
-
-        <section id="category">
-            <div class="category-btn">
-                <input type="radio" name="filter" id="MyPost" checked>
-                <label for="MyPost">내가 작성한 글</label>
-
-                <input type="radio" name="filter" id="follow">
-                <label for="follow">팔로워/팔로잉</label>
-
-                <input type="radio" name="filter" id="famous">
-                <label for="famous">인기가 많은 글</label>
-            </div>
-            <div class="write">
-                <p><a href="{% url 'post_write' %}">새 글 쓰기</a></p>
-            </div>
-        </section>
-
-        <section id="post-list">
-            {% if posts %}
+        {% else %}
+            <!-- 내가 쓴 글 목록 표시 -->
+            <div id="post-list">
                 {% for post in posts %}
                 <div class="post-card">
-                    <a href="{% url 'post_detail' post.id %}">
+                    <a href="{% url 'post_detail' post.pk %}">
                         <div id="thumnail">
-                            {% if post.youtube_thumbnail_url %}
-                                <img src="{{ post.youtube_thumbnail_url }}" alt="썸네일">
+                            {% if post.thumbnail %}
+                                <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
                             {% else %}
-                                <p>유효하지 않은 유튜브 링크</p>
+                                <div style="background-color: whitesmoke; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">썸네일 없음</div>
                             {% endif %}
                         </div>
                         <div id="info">
-                            <div id="userName">{{ post.user.username }}</div>
+                            <span>{{ post.title|truncatechars:20 }}</span>
                             <div id="likes">❤️ {{ post.like_count }}</div>
                         </div>
                         <div id="post-content">
-                            {{ post.content|truncatechars:20 }}
+                            {{ post.content|truncatewords:10 }}
                         </div>
                         <div id="tags">
-                            {% for tag in post.tags.all %}#{{ tag.name }} {% endfor %}
+                            {% for tag in post.tags.all %}
+                                #{{ tag.name }} 
+                            {% endfor %}
                         </div>
                     </a>
                 </div>
                 {% endfor %}
-            {% else %}
-                <div style="text-align: center; padding: 40px;">
-                    <p>아직 게시글이 없습니다.</p>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'post_write' %}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">첫 번째 글 작성하기</a>
-                    {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- 다른 탭들 -->
+        {% if not posts %}
+            <div class="no-content-message">
+                <h3>아직 게시글이 없습니다.</h3>
+                <p>첫 번째 글을 작성해보세요!</p>
+            </div>
+        {% else %}
+            <div id="post-list">
+                {% for post in posts %}
+                <div class="post-card">
+                    <a href="{% url 'post_detail' post.pk %}">
+                        <div id="thumnail">
+                            {% if post.thumbnail %}
+                                <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
+                            {% else %}
+                                <div style="background-color: whitesmoke; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">썸네일 없음</div>
+                            {% endif %}
+                        </div>
+                        <div id="info">
+                            <span>{{ post.title|truncatechars:20 }}</span>
+                            <div id="likes">❤️ {{ post.like_count }}</div>
+                        </div>
+                        <div id="post-content">
+                            {{ post.content|truncatewords:10 }}
+                        </div>
+                        <div id="tags">
+                            {% for tag in post.tags.all %}
+                                #{{ tag.name }} 
+                            {% endfor %}
+                        </div>
+                    </a>
                 </div>
-            {% endif %}
-        </section>
-    </body>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <script>
+    setTimeout(function() {
+        const messageContainer = document.querySelector('.message-container');
+        if (messageContainer) {
+            messageContainer.style.opacity = '0';
+            setTimeout(() => messageContainer.remove(), 300);
+        }
+    }, 3000);
+    </script>
+</body>
 </html>
