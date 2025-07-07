@@ -1,32 +1,15 @@
 <!-- blog/templates/blog/post_list.html -->
 
+{% extends 'blog/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>RhythmTag - 블로그</title>
-    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
-    <link rel="stylesheet" href="{% static 'blog/css/post_list.css' %}">
-</head>
-<body>
-    <header>
-        <div id="header">
-            <div id="logo">
-                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag" onclick="location.href='{% url 'post_list' %}'">
-            </div>
-            <div class="menu">
-                <div id="user">
-                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
-                </div>
-                <div id="menu">
-                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
-                </div>
-            </div>
-        </div>
-        <hr>
-    </header>
 
+{% block title %}게시글 목록 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'blog/css/post_list.css' %}">
+{% endblock %}
+
+{% block content %}
     <!-- 메시지 표시 -->
     {% if messages %}
     <div class="message-container">
@@ -154,6 +137,7 @@
             </div>
         {% endif %}
     {% endif %}
+    {% endblock %}
 
     <script>
     setTimeout(function() {

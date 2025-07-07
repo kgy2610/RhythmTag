@@ -1,0 +1,21 @@
+<!-- accounts/templates/accounts/profile.html -->
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}내 정보 - RhythmTag{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>내 정보</h2>
+    
+    <div class="user-info">
+        <p><strong>사용자명:</strong> {{ user.username }}</p>
+        <p><strong>이메일:</strong> {{ user.email|default:"이메일 없음" }}</p>
+        <p><strong>가입일:</strong> {{ user.date_joined|date:"Y년 m월 d일" }}</p>
+    </div>
+    
+    <div class="user-stats">
+        <p><strong>작성한 게시글:</strong> {{ user.posts.count }}개</p>
+    </div>
+</div>
+{% endblock %}

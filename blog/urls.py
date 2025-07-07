@@ -13,4 +13,8 @@ urlpatterns = [
     
     # 블로그 관련
     path('create/', views.BlogCreateView.as_view(), name='blog_create'),
+
+    # 내 정보
+    path('profile/', views.UserProfileView.as_view(), name='user_profile'),
+    path('logout/', views.LogoutView.as_view(), name="logout"),
 ]

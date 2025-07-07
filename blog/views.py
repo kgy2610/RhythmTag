@@ -1,14 +1,16 @@
 # blog/views.py
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
-from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth import logout
 from django.urls import reverse_lazy
-from .models import Post, Blog, Tag, PostTag
+from .models import Post, Blog
 from .forms import PostForm
 from django.db.models import Q
+from django.contrib import messages
+from django.views import View
+from django.http import JsonResponse
 
 
 class PostWriteView(CreateView):
@@ -267,3 +269,25 @@ class BlogCreateView(CreateView):  # 수정: LoginRequiredMixin 제거
         # 로그인하지 않은 사용자에게도 폼을 보여주기 위한 컨텍스트
         context['show_login_message'] = not self.request.user.is_authenticated
         return context
+    
+
+class UserProfileView(LoginRequiredMixin, TemplateView):
+    # 사용자 정보 페이지
+    template_name = 'accounts/profile.html'
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_posts'] = Post.objects.filter(user=self.request.user).order_by('-created_at')[:5]
+        context['total_posts'] = Post.objects.filter(user=self.request.user).count()
+        return context
+    
+class LogoutView(View):
+    def post(self, request):
+        logout(request)
+        messages.success(request, '로그아웃되었습니다.')
+        return redirect('post_list')
+    
+    def get(self, request):
+        logout(request)
+        messages.success(request, '로그아웃되었습니다.')
+        return redirect('post_list')
