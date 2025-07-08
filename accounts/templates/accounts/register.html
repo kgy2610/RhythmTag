@@ -14,7 +14,7 @@
     </div>
 
     <div id="main-register">
-        <form method="post" novalidate>
+        <form method="post" novalidate id="registerForm">
             {% csrf_token %}
             <div class="regs-option">
                 <p class="regs-label"> {{ form.userid.label }} </p>
@@ -25,17 +25,27 @@
             </div>
             <div class="regs-option">
                 <p class="regs-label"> {{ form.password1.label }} </p>
-                <p>
+                <div class="field-with-help">
                     {{ form.password1 }}
                     {{ form.password1.errors }}
-                </p>
+                    <!-- 추가: 비밀번호 가이드 -->
+                </div>
+            </div>
+            <div class="help-text">
+                <small>
+                    ✅ 8자 이상이어야 합니다<br>
+                    ✅ 숫자만으로는 구성할 수 없습니다<br>
+                    ✅ 아이디나 닉네임이 포함될 수 없습니다<br>
+                    ✅ 연속된 문자나 숫자는 사용할 수 없습니다
+                </small>
             </div>
             <div class="regs-option">
                 <p class="regs-label"> {{ form.password2.label }} </p>
-                <p>
+                <div class="field-with-help">
                     {{ form.password2 }}
                     {{ form.password2.errors }}
-                </p>
+                    <div id="password-match-feedback"></div>
+                </div>
             </div>
             <div class="regs-option">
                 <p class="regs-label"> {{ form.name.label }} </p>
@@ -66,5 +76,186 @@
     <div id="login-btn">
         <a href="{% url 'login' %}">로그인</a>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const userid = document.getElementById('id_userid');
+        const nickname = document.getElementById('id_nickname');
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        const matchFeedback = document.getElementById('password-match-feedback');
+
+        // 실시간 비밀번호 검증
+        password1.addEventListener('input', function() {
+            const password = this.value;
+            const useridValue = userid.value.toLowerCase();
+            const nicknameValue = nickname.value.toLowerCase();
+            
+            // 기존 피드백 제거
+            const existingFeedback = this.parentNode.querySelector('.password-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            if (password.length > 0) {
+                const feedback = document.createElement('div');
+                feedback.className = 'password-feedback';
+                
+                let isValid = true;
+                let message = '';
+                
+                if (password.length < 8) {
+                    isValid = false;
+                    message = '❌ 비밀번호는 8자 이상이어야 합니다';
+                } else if (password.length > 128) {
+                    isValid = false;
+                    message = '❌ 비밀번호는 128자를 초과할 수 없습니다';
+                } else if (password.match(/^\d+$/)) {
+                    isValid = false;
+                    message = '❌ 숫자만으로는 구성할 수 없습니다';
+                } else if (['password', '12345678', 'qwerty', 'abc123', 'abcdefg', 'password123'].includes(password.toLowerCase())) {
+                    isValid = false;
+                    message = '❌ 너무 간단한 비밀번호입니다';
+                } else if (['123', 'abc', 'qwe', 'asd'].some(seq => password.toLowerCase().includes(seq))) {
+                    isValid = false;
+                    message = '❌ 연속된 문자나 숫자는 사용할 수 없습니다';
+                } else if (useridValue && password.toLowerCase().includes(useridValue)) {
+                    isValid = false;
+                    message = '❌ 비밀번호에 아이디가 포함될 수 없습니다';
+                } else if (nicknameValue && password.toLowerCase().includes(nicknameValue)) {
+                    isValid = false;
+                    message = '❌ 비밀번호에 닉네임이 포함될 수 없습니다';
+                }
+                
+                if (isValid) {
+                    feedback.innerHTML = '✅ 사용 가능한 비밀번호입니다';
+                    feedback.className += ' success-feedback';
+                    this.style.borderColor = '#38a169';
+                    this.style.backgroundColor = '#f0fff4';
+                } else {
+                    feedback.innerHTML = message;
+                    feedback.className += ' korean-error';
+                    this.style.borderColor = '#e53e3e';
+                    this.style.backgroundColor = '#fff5f5';
+                }
+                
+                this.parentNode.appendChild(feedback);
+            } else {
+                this.style.borderColor = '#C084FC';
+                this.style.backgroundColor = 'whitesmoke';
+            }
+            
+            // 비밀번호 일치 확인도 업데이트
+            checkPasswordMatch();
+        });
+
+        // 아이디나 닉네임 변경 시에도 비밀번호 검증 업데이트
+        userid.addEventListener('input', function() {
+            if (password1.value) {
+                password1.dispatchEvent(new Event('input'));
+            }
+        });
+
+        nickname.addEventListener('input', function() {
+            if (password1.value) {
+                password1.dispatchEvent(new Event('input'));
+            }
+        });
+
+        // 비밀번호 일치 확인
+        function checkPasswordMatch() {
+            if (password1.value && password2.value) {
+                if (password1.value === password2.value) {
+                    password2.style.borderColor = '#38a169';
+                    password2.style.backgroundColor = '#f0fff4';
+                    matchFeedback.innerHTML = '<div class="success-feedback">✅ 비밀번호가 일치합니다</div>';
+                } else {
+                    password2.style.borderColor = '#e53e3e';
+                    password2.style.backgroundColor = '#fff5f5';
+                    matchFeedback.innerHTML = '<div class="korean-error">❌ 비밀번호가 일치하지 않습니다</div>';
+                }
+            } else {
+                matchFeedback.innerHTML = '';
+                password2.style.borderColor = '#C084FC';
+                password2.style.backgroundColor = 'whitesmoke';
+            }
+        }
+
+        password2.addEventListener('input', checkPasswordMatch);
+
+        // 폼 제출 전 최종 검증
+        form.addEventListener('submit', function(e) {
+            const password = password1.value;
+            const userid_val = userid.value.toLowerCase();
+            const nickname_val = nickname.value.toLowerCase();
+
+            // 비밀번호 일치 확인
+            if (password1.value !== password2.value) {
+                e.preventDefault();
+                alert('🔄 비밀번호가 일치하지 않습니다.');
+                password2.focus();
+                return false;
+            }
+
+            // 비밀번호 길이 확인
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('⚠️ 비밀번호는 8자 이상이어야 합니다.');
+                password1.focus();
+                return false;
+            }
+
+            // 숫자만으로 구성 확인
+            if (password.match(/^\d+$/)) {
+                e.preventDefault();
+                alert('⚠️ 비밀번호는 숫자만으로 구성할 수 없습니다.');
+                password1.focus();
+                return false;
+            }
+
+            // 간단한 비밀번호 확인
+            const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'abcdefg', 'password123'];
+            if (commonPasswords.includes(password.toLowerCase())) {
+                e.preventDefault();
+                alert('⚠️ 너무 간단한 비밀번호입니다. 더 복잡한 비밀번호를 사용해주세요.');
+                password1.focus();
+                return false;
+            }
+
+            // 연속 문자 확인
+            if (['123', 'abc', 'qwe', 'asd'].some(seq => password.toLowerCase().includes(seq))) {
+                e.preventDefault();
+                alert('⚠️ 연속된 문자나 숫자는 사용할 수 없습니다.');
+                password1.focus();
+                return false;
+            }
+
+            // 아이디 포함 확인
+            if (userid_val && password.toLowerCase().includes(userid_val)) {
+                e.preventDefault();
+                alert('⚠️ 비밀번호에 아이디가 포함될 수 없습니다.');
+                password1.focus();
+                return false;
+            }
+
+            // 닉네임 포함 확인
+            if (nickname_val && password.toLowerCase().includes(nickname_val)) {
+                e.preventDefault();
+                alert('⚠️ 비밀번호에 닉네임이 포함될 수 없습니다.');
+                password1.focus();
+                return false;
+            }
+
+            // 모든 검증 통과
+            if (confirm('✅ 회원가입을 진행하시겠습니까?')) {
+                return true;
+            } else {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+    </script>
     </body>
 </html>

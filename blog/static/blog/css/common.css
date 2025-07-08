@@ -45,13 +45,6 @@ header > hr{
     cursor: pointer;
     /* background-color: yellow; */
 }
-.menu #menu img{
-    float: right;
-    width: 50px; height: 50px;
-    cursor: pointer;
-    /* background-color: yellow; */
-}
-
 /* --------------------------------------- */
 
 .dropdown {
@@ -62,6 +55,7 @@ header > hr{
 .dropdown-content {
     display: none;
     position: absolute;
+    top: 55px;
     right: 0;
     background-color: white;
     min-width: 120px;
@@ -73,15 +67,16 @@ header > hr{
 }
 
 .dropdown-content a,
-.dropdown-content button {
+.logout-btn {
     color: #333;
     padding: 8px 16px;
     text-decoration: none;
     display: block;
     border: none;
     background: none;
-    width: 100%;
-    text-align: left;
+    width: 120px; height: 36px;
+    line-height: 36px;
+    text-align: center;
     cursor: pointer;
     font-size: 14px;
 }
@@ -92,6 +87,9 @@ header > hr{
 }
 
 .logout-btn {
+    width: 100%; height: 100%;
+    margin: 0 auto;
+    text-align: center;
     font-family: inherit;
 }
 

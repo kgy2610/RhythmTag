@@ -1,0 +1,39 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}블로그 정보 수정 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'blog/css/blog_update.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="title-update">
+    <p>#블로그 정보 수정</p>
+</div>
+
+<section>
+    <form method="post">
+        {% csrf_token %}
+
+        <div id="update-blog_name" class="form-group">
+            <label for="{{ form.blog_name.id_for_label }}">블로그 제목 : </label>
+            {{ form.blog_name }}
+            {{ form.blog_name.errors }}
+        </div>
+
+        <div id="update-content" class="form-group">
+            <label for="{{ form.blog_description.id_for_label }}">블로그 설명 : </label>
+            {{ form.blog_description }}
+            {{ form.blog_description.errors }}
+        </div>
+
+        <div id="update-btn">
+            <button type="submit">수정 완료</button>
+            <button type="button" onclick="window.location.href='{% url 'user_profile' %}'">
+                취소
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

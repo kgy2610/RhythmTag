@@ -162,7 +162,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.user.nickname}: {self.comment[:30]}..."  # username → nickname으로 변경
+        return f"{self.user.nickname}: {self.comment[:30]}..."
     
     class Meta:
         verbose_name = '댓글'

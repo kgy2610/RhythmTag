@@ -13,8 +13,13 @@ urlpatterns = [
     
     # 블로그 관련
     path('create/', views.BlogCreateView.as_view(), name='blog_create'),
+    path('update/', views.BlogUpdateView.as_view(), name='blog_update'),
+    path('delete/', views.BlogDeleteView.as_view(), name='blog_delete'),
 
-    # 내 정보
+    # 사용자 관련
     path('profile/', views.UserProfileView.as_view(), name='user_profile'),
+    path('profile/update/', views.ProfileUpdateView.as_view(), name='profile_update'),
+    path('profile/passwordupdate/', views.PasswordChangeView.as_view(), name='password_change'),
+    path('profile/delete/', views.AccountDeleteView.as_view(), name='profile_delete'),
     path('logout/', views.LogoutView.as_view(), name="logout"),
 ]

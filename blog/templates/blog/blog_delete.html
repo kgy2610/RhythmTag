@@ -1,0 +1,31 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}블로그 삭제 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'blog/css/post_delete.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="delete-tag">
+    <h1>#블로그 삭제</h1>
+</div>
+<div id="delete-img">
+    <img src="{% static 'blog/images/post_delete_dance.jpg' %}" alt="댄스 이미지">
+</div>
+<div id="delete-msg">
+    <p>정말 이 블로그를 <a>삭제</a>하시겠습니까?</p>
+    <p>삭제 후 <a>복구할 수 없습니다</a></p>
+</div>
+<div id="delete-title">
+    <p><strong>{{ object.title }}</strong></p>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">삭제</button>
+    <button type="button" onclick="window.location.href='{% url 'user_profile' %}'">
+        돌아가기
+    </button>
+</form>
+{% endblock %}

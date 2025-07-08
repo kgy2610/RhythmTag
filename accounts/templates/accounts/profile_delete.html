@@ -1,0 +1,167 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}회원 탈퇴 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'blog/css/post_update.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/profile_delete.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <!-- 경고 헤더 -->
+    <div class="warning-header">
+        <div class="warning-icon">⚠️</div>
+        <h1 class="warning-title">#회원 탈퇴</h1>
+        <p class="warning-subtitle">정말로 계정을 삭제하시겠습니까?</p>
+    </div>
+
+    <!-- 현재 계정 정보 -->
+    <div class="info-section">
+        <h3>📋 현재 계정 정보</h3>
+        <div style="text-align: center; margin: 20px 0;">
+            <div style="display: inline-block; background: white; padding: 15px 25px; border-radius: 8px; border: 2px solid #007bff;">
+                <strong>사용자 ID:</strong> 
+                <span style="color: #007bff; font-size: 18px; font-weight: bold;">{{ user.userid }}</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ blog_count }}</div>
+                <div class="stat-label">블로그</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ post_count }}</div>
+                <div class="stat-label">게시글</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ like_count }}</div>
+                <div class="stat-label">좋아요</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 경고 사항 -->
+    <div class="warning-section">
+        <h3 style="color: #dc3545; margin-top: 0;">🚨 중요 안내사항</h3>
+        <ul class="danger-list">
+            <li>모든 블로그와 게시글이 <strong>영구적으로 삭제</strong>됩니다</li>
+            <li>다른 사용자 게시글에 남긴 좋아요가 <strong>모두 취소</strong>됩니다</li>
+            <li>삭제된 데이터는 <strong>절대 복구할 수 없습니다</strong></li>
+            <li>탈퇴 후 같은 아이디로 재가입은 가능하지만 <strong>기존 데이터는 복구되지 않습니다</strong></li>
+        </ul>
+    </div>
+
+    <!-- 탈퇴 폼 -->
+    <div class="form-section">
+        <h3 style="color: #dc3545; margin-top: 0;">🔒 계정 확인</h3>
+        
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+
+            <!-- 비밀번호 입력 -->
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}" class="form-label">
+                    현재 비밀번호
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <div class="error-message">⚠️ {{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- 확인 체크박스 -->
+            <div class="checkbox-group">
+                {{ form.confirm_delete }}
+                <label for="{{ form.confirm_delete.id_for_label }}" class="checkbox-label">
+                    {{ form.confirm_delete.label }}
+                </label>
+            </div>
+            {% if form.confirm_delete.errors %}
+                {% for error in form.confirm_delete.errors %}
+                    <div class="error-message">⚠️ {{ error }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- 전체 폼 오류 -->
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="error-message">⚠️ {{ error }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- 버튼 그룹 -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn-danger">
+                    🗑️ 회원 탈퇴 진행
+                </button>
+                <a href="{% url 'user_profile' %}" class="btn-secondary">
+                    ❌ 취소
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 마지막 안내 -->
+    <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px; border-left: 5px solid #007bff; text-align: center;">
+        <p style="color: #004085; margin: 0;">
+            <strong>💡 잠깐!</strong> 계정을 삭제하는 대신 <strong>잠시 휴식</strong>을 취해보는 것은 어떨까요?<br>
+            언제든지 다시 돌아와 주세요! 🤗
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('deleteForm');
+    const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+    const confirmCheckbox = document.getElementById('{{ form.confirm_delete.id_for_label }}');
+
+    // 폼 제출 시 최종 확인
+    form.addEventListener('submit', function(e) {
+        const password = passwordInput.value;
+        const confirmed = confirmCheckbox.checked;
+
+        if (!password) {
+            e.preventDefault();
+            alert('🔒 비밀번호를 입력해주세요.');
+            passwordInput.focus();
+            return false;
+        }
+
+        if (!confirmed) {
+            e.preventDefault();
+            alert('⚠️ 회원 탈퇴에 동의해주세요.');
+            confirmCheckbox.focus();
+            return false;
+        }
+
+        if (!confirm('🚨 정말로 회원탈퇴를 진행하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+            e.preventDefault();
+            return false;
+        }
+
+        // 폼 제출 중 버튼 비활성화
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '🔄 처리 중...';
+
+        return true;
+    });
+
+    // 비밀번호 입력 시 엔터키로 제출
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

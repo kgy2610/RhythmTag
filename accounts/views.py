@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from .models import User
 
 User = get_user_model()
 
@@ -18,15 +19,20 @@ class CustomLoginView(FormView):
     form_class = CustomAuthenticationForm
     success_url = reverse_lazy('post_list')
 
+    # 추가: 폼에 request 전달
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
     def form_valid(self, form):
-        # 수정: 폼의 get_user() 메서드 사용으로 간소화
         user = form.get_user()
         if user is not None:
             login(self.request, user)
             messages.success(self.request, f'환영합니다, {user.nickname}님!')
             return redirect(self.success_url)
         else:
-            form.add_error('userid', '아이디 또는 비밀번호가 잘못되었습니다.')  # 수정: username → userid
+            form.add_error('userid', '아이디 또는 비밀번호가 잘못되었습니다.')
             return self.form_invalid(form)
 
     def get(self, request, *args, **kwargs):
@@ -56,3 +62,4 @@ class CustomLogoutView(LogoutView):
         if request.user.is_authenticated:
             messages.success(request, f'안녕히 가세요, {request.user.nickname}님!')
         return super().dispatch(request, *args, **kwargs)
+    

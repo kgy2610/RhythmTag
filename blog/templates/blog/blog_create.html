@@ -1,30 +1,15 @@
 <!-- blog/templates/blog/blog_create.html -->
-{% load static %}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>블로그 생성</title>
-    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
-</head>
-<body>
-    <header>
-        <div id="header">
-            <div id="logo">
-                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
-            </div>
-            <div class="menu">
-                <div id="user">
-                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
-                </div>
-                <div id="menu">
-                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
-                </div>
-            </div>
-        </div>
-        <hr>
-    </header>
 
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}내 정보 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
+    {% endblock %}
+
+{% block content %}
     <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
         <h2>블로그 생성하기</h2>
         <p>나만의 블로그를 만들어보세요!</p>
@@ -101,5 +86,4 @@
         </div>
         {% endif %}
     </div>
-</body>
-</html>
+{% endblock %}

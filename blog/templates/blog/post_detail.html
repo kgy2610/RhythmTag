@@ -1,30 +1,14 @@
+{% extends 'blog/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }}</title>
+
+{% block title %}내 정보 - RhythmTag{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'blog/css/common.css' %}">
     <link rel="stylesheet" href="{% static 'blog/css/post_detail.css' %}">
-</head>
-<body>
-    <header>
-        <div id="header">
-            <div id="logo">
-                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag">
-            </div>
-            <div class="menu">
-                <div id="user">
-                    <img src="{% static 'blog/images/user.png' %}" alt="내 정보">
-                </div>
-                <div id="menu">
-                    <img src="{% static 'blog/images/menu.png' %}" alt="메뉴">
-                </div>
-            </div>
-        </div>
-        <hr>
-    </header>
+{% endblock %}
+
+{% block content %}
     <div id="back-button">
         <a href="{% url 'post_list' %}" class="back-link">← 목록으로 돌아가기</a>
     </div>
@@ -94,5 +78,4 @@
             {% endfor %}
         </div>
     </section>
-</body>
-</html>
+{% endblock %}

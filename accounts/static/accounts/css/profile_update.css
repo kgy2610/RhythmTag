@@ -1,0 +1,124 @@
+.form-control, input[type="text"], input[type="tel"] {
+    border: none;
+    border-top: 1px solid #C084FC;
+    border-bottom: 1px solid #C084FC;
+    background-color: whitesmoke;
+    box-sizing: border-box;
+    padding: 12px 15px;
+    width: 100%;
+    border-radius: 0;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, input[type="text"]:focus, input[type="tel"]:focus {
+    outline: none;
+    border-top: 2px solid #C084FC;
+    border-bottom: 2px solid #C084FC;
+    background-color: #fafafa;
+    box-shadow: 0 2px 8px rgba(192, 132, 252, 0.2);
+}
+
+/* 읽기 전용 필드 스타일 */
+.readonly-field {
+    border: none;
+    border-top: 1px solid #C084FC;
+    border-bottom: 1px solid #C084FC;
+    background-color: #f0f0f0;
+    box-sizing: border-box;
+    padding: 12px 15px;
+    border-radius: 0;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 16px;
+}
+
+/* 폼 그룹 스타일 */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #495057;
+    font-size: 16px;
+}
+
+/* 에러 메시지 스타일 */
+.errorlist {
+    color: #dc3545;
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 0 0;
+    font-size: 14px;
+}
+
+/* 버튼 스타일 */
+#update-btn button {
+    padding: 12px 25px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+#update-btn button[type="submit"] {
+    background-color: #C084FC;
+    color: white;
+}
+
+#update-btn button[type="submit"]:hover {
+    background-color: #a855f7;
+    transform: translateY(-1px);
+}
+
+#update-btn button[type="button"] {
+    background-color: #6c757d;
+    color: white;
+}
+
+#update-btn button[type="button"]:hover {
+    background-color: #545b62;
+}
+
+form{
+    width: 1000px; height: 800px;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+label{
+    width: 220px;height: 40px;
+    float: left;
+    text-align: right;
+    line-height: 40px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+
+#id_nickname, #id_name, #id_phone{
+    width: 200px; height: 40px;
+    line-height: 40px;
+    border-bottom: 1px solid #C084FC;
+    border-top: 1px solid #C084FC;
+    background-color: whitesmoke;
+    box-sizing: border-box;
+    float: right;
+}
+
+.readonly-field{
+    width: 200px; height: 40px;
+    line-height: 15px;
+    border-bottom: 1px solid #C084FC;
+    border-top: 1px solid #C084FC;
+    background-color: whitesmoke;
+    box-sizing: border-box;
+    float: right;
+}
