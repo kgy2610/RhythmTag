@@ -4,19 +4,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView, TemplateView
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.contrib.auth import logout, update_session_auth_hash, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Q
-from .forms import CustomPasswordChangeForm, AccountDeleteForm
-
-User = get_user_model()
+from django.db.models import Q, Count
+from django.http import JsonResponse
+from accounts.models import Follow
 
 # 로컬 모듈
-from .models import Post, Blog
-from .forms import PostForm
+from .models import Post, Blog, Like
+from .forms import PostForm, CustomPasswordChangeForm, AccountDeleteForm
+
+User = get_user_model()
 
 # 게시글 작성
 class PostWriteView(CreateView):
@@ -72,34 +75,52 @@ class PostListView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # 성능 최적화: 관련 객체들을 미리 가져오기
+        queryset = Post.objects.select_related('user', 'blog').prefetch_related('tags', 'likes')
+        
+        # 검색 기능 먼저 처리
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            if search_query.startswith('#'):
+                # #태그 형식으로 검색하면 태그만 검색
+                tag_name = search_query[1:]  # # 제거
+                queryset = queryset.filter(tags__name__icontains=tag_name)
+            else:
+                # 일반 검색: 제목, 내용, 태그 모두 검색
+                queryset = queryset.filter(
+                    Q(title__icontains=search_query) | 
+                    Q(content__icontains=search_query) |  # 추가: 내용 검색
+                    Q(tags__name__icontains=search_query)
+                ).distinct()  # ManyToMany 관계 때문에 중복 제거 필요
         
         # 필터링 옵션 처리
-        filter_option = self.request.GET.get('filter', 'all')  # 기본값을 'all'로 변경
+        filter_option = self.request.GET.get('filter', 'all')
         
         if filter_option == 'my' and self.request.user.is_authenticated:
-            # "내가 작성한 글" 탭 - 로그인한 사용자의 글만 필터링
             queryset = queryset.filter(user=self.request.user)
         elif filter_option == 'follow' and self.request.user.is_authenticated:
-            # "팔로워/팔로잉 글" 탭 (추후 구현)
-            pass
+            # 팔로우 기능 구현 시 추가
+            following_users = self.request.user.get_following_users()
+            if following_users.exists():
+                queryset = queryset.filter(user__in=following_users)
+            else:
+                queryset = queryset.none()
         elif filter_option == 'famous':
-            # "인기가 많은 글" 탭
-            queryset = queryset.order_by('-like_count')
-        # filter_option == 'all'이면 모든 글 표시 (기본값)
+            # 수정: 좋아요 개수로 정렬 (DB 레벨에서 계산)
+            queryset = queryset.annotate(
+                likes_count=Count('likes')  # Like 모델이 있다고 가정
+            ).order_by('-likes_count', '-created_at')
+            return queryset
         
-        # 검색 기능
-        search_query = self.request.GET.get('search', '')
-        if search_query:
-            queryset = queryset.filter(
-                Q(title__icontains=search_query) | 
-                Q(tags__name__icontains=search_query)
-            ).distinct()
-        
+        # 기본 정렬: 최신순
         return queryset.order_by('-created_at')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # 검색 관련 정보 추가
+        search_query = self.request.GET.get('search', '').strip()
+        context['search_query'] = search_query
         
         # 현재 필터 옵션
         context['current_filter'] = self.request.GET.get('filter', 'all')
@@ -107,19 +128,42 @@ class PostListView(ListView):
         # 로그인한 사용자의 블로그 확인
         context['user_has_blog'] = False
         context['user_blog'] = None
-        context['blog_name'] = '#블로그가 없습니다'  # 기본값
+        context['blog_name'] = '#전체 게시글'  # 수정: 더 명확한 기본값
         
         if self.request.user.is_authenticated:
             try:
                 user_blog = Blog.objects.get(user=self.request.user)
                 context['user_blog'] = user_blog
                 context['user_has_blog'] = True
-                context['blog_name'] = f'#{user_blog.blog_name}'  # 수정: 사용자 블로그 이름 사용
+                
+                # 필터에 따라 블로그 이름 변경
+                if context['current_filter'] == 'my':
+                    context['blog_name'] = f'#{user_blog.blog_name}'
+                else:
+                    context['blog_name'] = '#전체 게시글'
             except Blog.DoesNotExist:
                 context['user_has_blog'] = False
-                context['blog_name'] = '#블로그가 없습니다'  # 블로그가 없을 때 기본값
-                
+                if context['current_filter'] == 'my':
+                    context['blog_name'] = '#블로그가 없습니다'
+                else:
+                    context['blog_name'] = '#전체 게시글'
+
+        # 검색 결과 정보 추가
+        if search_query:
+            # 페이지네이션된 결과의 전체 개수
+            context['search_result_count'] = self.get_queryset().count()
+        
+        # 좋아요 관련 기능
+        # 각 포스트에 현재 사용자의 좋아요 상태 추가
+        if self.request.user.is_authenticated:
+            for post in context['posts']:
+                post.user_liked = post.is_liked_by(self.request.user)
+        else:
+            # 비로그인 사용자는 모든 포스트에 대해 false
+            for post in context['posts']:
+                post.user_liked = False
         return context
+        
 
 # 게시글 상세
 class PostDetailView(DetailView):
@@ -145,10 +189,29 @@ class PostDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # YouTube embed URL 생성
+        post = self.get_object()
+        youtube_embed_url = None
+        
+        if post.link and ('youtube.com' in post.link or 'youtu.be' in post.link):
+            if 'youtube.com/watch?v=' in post.link:
+                video_id = post.link.split('watch?v=')[1].split('&')[0]
+            elif 'youtu.be/' in post.link:
+                video_id = post.link.split('youtu.be/')[1].split('?')[0]
+            else:
+                video_id = None
+                
+            if video_id:
+                youtube_embed_url = f'https://www.youtube.com/embed/{video_id}'
+        
+        context['youtube_embed_url'] = youtube_embed_url
         
         # 좋아요 여부 확인
         if self.request.user.is_authenticated:
             context['user_liked'] = self.object.likes.filter(user=self.request.user).exists()
+        else:
+            context['user_liked'] = False
         
         # 디버깅용 로그
         print(f"게시글 조회: {self.object.title}")
@@ -215,27 +278,6 @@ class BlogCreateView(CreateView):
         context['show_login_message'] = not self.request.user.is_authenticated
         return context
     
-
-# 사용자 정보 페이지
-class UserProfileView(LoginRequiredMixin, TemplateView):
-    template_name = 'accounts/profile.html'
-        
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_posts'] = Post.objects.filter(user=self.request.user).order_by('-created_at')[:5]
-        context['total_posts'] = Post.objects.filter(user=self.request.user).count()
-        return context
-    
-class LogoutView(View):
-    def post(self, request):
-        logout(request)
-        messages.success(request, '로그아웃되었습니다.')
-        return redirect('post_list')
-    
-    def get(self, request):
-        logout(request)
-        messages.success(request, '로그아웃되었습니다.')
-        return redirect('post_list')
     
 
 # 블로그 정보 수정
@@ -367,7 +409,7 @@ class PasswordChangeView(LoginRequiredMixin, TemplateView):
 
 # 회원 탈퇴
 class AccountDeleteView(LoginRequiredMixin, TemplateView):
-    """회원 탈퇴 뷰"""
+    # 회원 탈퇴 뷰
     template_name = 'accounts/profile_delete.html'
     
     def get_context_data(self, **kwargs):
@@ -389,7 +431,7 @@ class AccountDeleteView(LoginRequiredMixin, TemplateView):
         return context
     
     def post(self, request, *args, **kwargs):
-        """회원 탈퇴 처리"""
+    # 회원 탈퇴 처리
         form = AccountDeleteForm(user=request.user, data=request.POST)
         
         if form.is_valid():
@@ -437,3 +479,50 @@ class AccountDeleteView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data()
         context['form'] = form
         return render(request, self.template_name, context)
+    
+@login_required
+@require_POST
+def toggle_like(request, post_id):
+    # 좋아요 토글 (Ajax 요청 처리
+    post = get_object_or_404(Post, id=post_id)
+    
+    # 기존 좋아요 확인
+    like, created = Like.objects.get_or_create(
+        user=request.user,
+        post=post
+    )
+    
+    if not created:
+        # 이미 좋아요가 있다면 제거
+        like.delete()
+        is_liked = False
+        message = '좋아요를 취소했습니다.'
+    else:
+        # 새로운 좋아요
+        is_liked = True
+        message = '좋아요를 눌렀습니다.'
+    
+    # Ajax 요청인지 확인
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'is_liked': is_liked,
+            'like_count': post.like_count,
+            'message': message
+        })
+    else:
+        # 일반 요청일 경우 메시지와 함께 리다이렉트
+        messages.success(request, message)
+        return redirect('post_detail', pk=post_id)
+    
+@property
+def youtube_thumbnail_url(self):
+    if self.link and ('youtube.com' in self.link or 'youtu.be' in self.link):
+        # YouTube URL에서 video ID 추출
+        if 'youtube.com/watch?v=' in self.link:
+            video_id = self.link.split('watch?v=')[1].split('&')[0]
+        elif 'youtu.be/' in self.link:
+            video_id = self.link.split('youtu.be/')[1].split('?')[0]
+        else:
+            return None
+        return f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+    return None

@@ -1,0 +1,247 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.nickname }}님의 프로필 - RhythmTag{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'accounts/css/profile_user.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- 프로필 헤더 -->
+    <div class="profile-header">
+        <div class="user-info">
+            <div class="user-avatar">
+                <div class="avatar-circle">
+                    {{ profile_user.nickname|first|upper }}
+                </div>
+            </div>
+            <div class="user-details">
+                <h2 class="user-nickname">{{ profile_user.nickname }}</h2>
+                <p class="user-id">@{{ profile_user.userid }}</p>
+                <p class="user-name">{{ profile_user.name }}</p>
+                <p class="join-date">가입일: {{ profile_user.created_at|date:"Y년 m월 d일" }}</p>
+            </div>
+        </div>
+        
+        <div class="stats-and-action">
+            <!-- 팔로워/팔로잉 통계 -->
+            <div class="follow-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="followers-count">{{ followers_count }}</span>
+                    <span class="stat-label">팔로워</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="following-count">{{ following_count }}</span>
+                    <span class="stat-label">팔로잉</span>
+                </div>
+            </div>
+            
+            <!-- 팔로우 버튼 -->
+            {% if user.is_authenticated and user != profile_user %}
+            <div class="follow-button-container">
+                <button class="follow-btn" 
+                        data-user-id="{{ profile_user.id }}"
+                        data-following="{{ is_following|yesno:'true,false' }}">
+                    {% if is_following %}
+                        <span class="btn-icon">❤️</span>
+                        <span class="btn-text">팔로잉</span>
+                    {% else %}
+                        <span class="btn-icon">🤍</span>
+                        <span class="btn-text">팔로우</span>
+                    {% endif %}
+                </button>
+            </div>
+            {% elif not user.is_authenticated %}
+            <div class="follow-button-container">
+                <a href="{% url 'login' %}" class="login-prompt-btn">
+                    로그인 후 팔로우
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 사용자의 게시글 목록 -->
+    <div class="user-posts-section">
+        <div class="section-header">
+            <h3>{{ profile_user.nickname }}님의 게시글</h3>
+            <span class="posts-count">총 {{ user_posts|length }}개</span>
+        </div>
+        
+        {% if user_posts %}
+            <div class="posts-grid">
+                {% for post in user_posts %}
+                <div class="post-card">
+                    <a href="{% url 'post_detail' post.pk %}" class="post-link">
+                        <!-- 썸네일 -->
+                        <div class="post-thumbnail">
+                            {% if post.youtube_thumbnail_url %}
+                                <img src="{{ post.youtube_thumbnail_url }}" alt="{{ post.title }}">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                </div>
+                            {% else %}
+                                <div class="no-thumbnail">
+                                    <span class="no-thumb-icon">📝</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 게시글 정보 -->
+                        <div class="post-info">
+                            <h4 class="post-title">{{ post.title|truncatechars:25 }}</h4>
+                            <p class="post-content">{{ post.content|striptags|truncatewords:8 }}</p>
+                            
+                            <!-- 태그들 -->
+                            <div class="post-tags">
+                                {% for tag in post.tags.all|slice:":3" %}
+                                    <span class="tag">{{ tag.name }}</span>
+                                {% endfor %}
+                                {% if post.tags.count > 3 %}
+                                    <span class="tag-more">+{{ post.tags.count|add:"-3" }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- 메타 정보 -->
+                            <div class="post-meta">
+                                <span class="meta-item">
+                                    <span class="meta-icon">❤️</span>
+                                    {{ post.like_count }}
+                                </span>
+                                <span class="meta-item">
+                                    <span class="meta-icon">👁️</span>
+                                    {{ post.view_count }}
+                                </span>
+                                <span class="meta-item">
+                                    <span class="meta-icon">📅</span>
+                                    {{ post.created_at|date:"m/d" }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-posts">
+                <div class="no-posts-icon">📝</div>
+                <p class="no-posts-message">아직 작성한 게시글이 없습니다.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- CSRF 토큰 -->
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.querySelector('.follow-btn');
+    
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const isFollowing = this.dataset.following === 'true';
+            const btnIcon = this.querySelector('.btn-icon');
+            const btnText = this.querySelector('.btn-text');
+            
+            // 버튼 비활성화 (중복 클릭 방지)
+            this.disabled = true;
+            this.style.opacity = '0.7';
+            
+            fetch(`/user/${userId}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // 버튼 상태 업데이트
+                if (data.is_following) {
+                    btnIcon.textContent = '❤️';
+                    btnText.textContent = '팔로잉';
+                    this.dataset.following = 'true';
+                    this.classList.add('following');
+                } else {
+                    btnIcon.textContent = '🤍';
+                    btnText.textContent = '팔로우';
+                    this.dataset.following = 'false';
+                    this.classList.remove('following');
+                }
+                
+                // 팔로워 수 업데이트
+                document.getElementById('followers-count').textContent = data.followers_count;
+                
+                // 성공 메시지 표시
+                showMessage(data.message, 'success');
+                
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+            })
+            .finally(() => {
+                // 버튼 재활성화
+                this.disabled = false;
+                this.style.opacity = '1';
+            });
+        });
+    }
+});
+
+// 메시지 표시 함수
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        background-color: ${type === 'success' ? '#38a169' : '#e53e3e'};
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // 3초 후 자동 제거
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// CSS 애니메이션 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

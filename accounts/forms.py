@@ -39,15 +39,24 @@ class CustomAuthenticationForm(forms.Form):
         password = self.cleaned_data.get('password')
 
         if userid and password:
-            self.user_cache = authenticate(
-                request=self.request,
-                userid=userid,  # 직접 userid 사용
-                password=password
-            )
-            if self.user_cache is None:
-                raise ValidationError('아이디 또는 비밀번호가 올바르지 않습니다.')
-            if not self.user_cache.is_active:
-                raise ValidationError('이 계정은 비활성화되었습니다.')
+            # 1단계: 아이디가 존재하는지 확인
+            try:
+                user = User.objects.get(userid=userid)
+            except User.DoesNotExist:
+                # 아이디가 존재하지 않는 경우
+                raise ValidationError('존재하지 않는 아이디입니다.')
+            
+            # 2단계: 계정이 활성화되어 있는지 확인
+            if not user.is_active:
+                raise ValidationError('비활성화된 계정입니다. 관리자에게 문의하세요.')
+            
+            # 3단계: 비밀번호 확인
+            if not user.check_password(password):
+                # 비밀번호가 틀린 경우
+                raise ValidationError('비밀번호가 틀렸습니다.')
+            
+            # 모든 검증을 통과한 경우
+            self.user_cache = user
 
         return self.cleaned_data
 

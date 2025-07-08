@@ -17,6 +17,11 @@
             <div id="content-title">
                 {{ post.title }}
             </div>
+            <div class="post-author">
+                <a href="{% url 'other_user_profile' user_id=post.user.id %}" style="color: #7C3AED; text-decoration: none; font-weight: 600;">
+                    {{ post.user.nickname }}님의 게시글
+                </a>
+            </div>
             <div id="content-link">
                 {% if youtube_embed_url %}
                 <iframe width="560" height="315"
@@ -44,7 +49,19 @@
         <div class="content-reaction">
             <div id="reply-count">
                 <div id="likes">
-                    ❤️ 0
+                    {% if user.is_authenticated %}
+                        <button class="like-btn" 
+                                data-post-id="{{ post.id }}" 
+                                data-liked="{{ user_liked|yesno:'true,false' }}">
+                            {% if user_liked %}
+                                ❤️ {{ post.like_count }}
+                            {% else %}
+                                🤍 {{ post.like_count }}
+                            {% endif %}
+                        </button>
+                    {% else %}
+                        <a href="{% url 'login' %}">❤️ {{ post.like_count }}</a>
+                    {% endif %}
                 </div>
                 <div id="comment">
                     🗨️ {{ post.comment_set.count }}

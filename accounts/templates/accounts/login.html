@@ -13,6 +13,17 @@
         <h1>#LOGIN</h1>
     </div>
     
+    <!-- 👇 전체 폼 오류를 폼 밖으로 이동 -->
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {% for error in form.non_field_errors %}
+                <div class="error-message">
+                    ⚠️ {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
     <div id="main-login">
         <form method="post" novalidate>
             {% csrf_token %}
@@ -20,16 +31,31 @@
                 <p class="login-label"> {{ form.userid.label }} </p>
                 <p>
                     {{ form.userid }}
-                    {{ form.userid.errors }}
+                    <!-- 👇 필드별 오류 스타일링 개선 -->
+                    {% if form.userid.errors %}
+                        {% for error in form.userid.errors %}
+                            <div class="field-error">
+                                ❌ {{ error }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                 </p>
             </div>
             <div class="login-option">
                 <p class="login-label"> {{ form.password.label }} </p>
                 <p>
                     {{ form.password }}
-                    {{ form.password.errors }}
+                    <!-- 👇 필드별 오류 스타일링 개선 -->
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                            <div class="field-error">
+                                ❌ {{ error }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                 </p>
             </div>
+            
             <div class="login-option buttons">
                 <button type="submit">로그인</button>
             </div>
@@ -38,5 +64,40 @@
     <div id="register-btn">
         <a href="{% url 'register' %}">회원가입</a>
     </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 오류가 있는 필드에 error 클래스 추가
+            const useridField = document.querySelector('#id_userid');
+            const passwordField = document.querySelector('#id_password');
+            
+            // 필드에 오류가 있으면 시각적 표시
+            if (document.querySelector('.login-option:nth-child(2) .field-error')) {
+                useridField.classList.add('error');
+            }
+            
+            if (document.querySelector('.login-option:nth-child(3) .field-error')) {
+                passwordField.classList.add('error');
+            }
+            
+            // 입력 시 오류 스타일 제거
+            useridField.addEventListener('input', function() {
+                this.classList.remove('error');
+                const errorDiv = this.parentNode.querySelector('.field-error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            });
+            
+            passwordField.addEventListener('input', function() {
+                this.classList.remove('error');
+                const errorDiv = this.parentNode.querySelector('.field-error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            });
+        });
+        </script>
 </body>
 </html>

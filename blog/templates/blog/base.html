@@ -110,6 +110,48 @@
 
             // 로고 클릭 커서 스타일
             document.querySelector('#logo img').style.cursor = 'pointer';
+
+
+            // 좋아요 버튼 Ajax 처리
+            document.addEventListener('DOMContentLoaded', function() {
+                const likeButtons = document.querySelectorAll('.like-btn');
+                
+                likeButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const postId = this.dataset.postId;
+                        const isLiked = this.dataset.liked === 'true';
+                        
+                        fetch(`/blog/post/${postId}/like/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'same-origin'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // 버튼 상태 업데이트
+                            if (data.is_liked) {
+                                this.innerHTML = `❤️ ${data.like_count}`;
+                                this.dataset.liked = 'true';
+                            } else {
+                                this.innerHTML = `🤍 ${data.like_count}`;
+                                this.dataset.liked = 'false';
+                            }
+                            
+                            // 메시지 표시 (선택사항)
+                            console.log(data.message);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    });
+                });
+            });
         </script>
     {% endblock %}
 </body>

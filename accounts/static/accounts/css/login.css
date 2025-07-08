@@ -62,3 +62,47 @@
     background-color: whitesmoke;
     box-sizing: border-box;
 }
+
+/* 전체 폼 오류 스타일 */
+.form-errors {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.error-message {
+    color: #e53e3e;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    padding: 5px 0;
+}
+
+/* 필드별 오류 스타일 */
+.field-error {
+    color: #e53e3e;
+    font-size: 14px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 4px;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 오류가 있는 입력 필드 스타일 */
+.login-option input.error {
+    border-color: #e53e3e;
+    background-color: #fff5f5;
+}
+
+/* 폼 전체의 간격 조정 */
+.form-errors + #main-login {
+    margin-top: 10px;
+}

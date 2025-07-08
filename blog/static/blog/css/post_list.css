@@ -188,3 +188,12 @@
 .create-blog-btn:hover, .write-first-btn:hover {
     background-color: #6D28D9;
 }
+
+.like-btn{
+    width: 50px;
+    background-color: whitesmoke;
+    border: none;
+}
+.post-card:hover .like-btn{
+    background-color: #F3E8FF;
+}

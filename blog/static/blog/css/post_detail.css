@@ -203,3 +203,26 @@ section{
     text-align: center;
     margin-right: 10px;
 }
+
+.like-btn{
+    width: 70px; height: 40px;
+    background-color: whitesmoke;
+    border: none;
+    font-size: 20px;
+}
+.like-btn:hover{
+    border-radius: 20px;
+    background-color: #F3E8FF;
+}
+
+.post-author{
+    display: flex;
+    justify-content: flex-end;
+    width: 1000px;height: 60px;
+    line-height: 75px;
+}
+.post-author a{
+    text-align: right;
+    box-sizing: border-box;
+    margin-right: 10px;
+}
