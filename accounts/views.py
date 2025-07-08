@@ -166,7 +166,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
 # 비밀번호 변경 뷰
 class PasswordChangeView(LoginRequiredMixin, DjangoPasswordChangeView):
-    template_name = 'accounts/password_change.html'
+    template_name = 'accounts/profile_password_update.html'
     success_url = reverse_lazy('user_profile')
     
     def form_valid(self, form):
