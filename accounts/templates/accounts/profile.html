@@ -19,6 +19,10 @@
         <button class="tab-button" onclick="showTab('profile-info')">
             👤 내 프로필 정보
         </button>
+        <!-- 추가된 팔로우 탭 메뉴 -->
+        <button class="tab-button" onclick="showTab('follow-info')">
+            👥 팔로우
+        </button>
     </div>
 
     <!-- 오른쪽 컨텐츠 영역 -->
@@ -137,6 +141,91 @@
                 </div>
             </div>
         </div>
+
+        <!-- 추가된 팔로우 정보 탭 -->
+        <div id="follow-info" class="tab-pane">
+            <h2>팔로우 관리</h2>
+            
+            <!-- 팔로우 통계 -->
+            <div class="follow-stats-section">
+                <div class="info-card">
+                    <div class="follow-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">{{ following_count|default:0 }}</span>
+                            <span class="stat-label">팔로잉</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">{{ followers_count|default:0 }}</span>
+                            <span class="stat-label">팔로워</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 팔로잉 목록 -->
+            <div class="follow-section">
+                <h3>📤 내가 팔로우한 사람 ({{ following_count|default:0 }}명)</h3>
+                {% if following_list %}
+                    <div class="info-card">
+                        {% for follow in following_list %}
+                            <div class="follow-item">
+                                <div class="follow-user-info">
+                                    <span class="follow-username">{{ follow.following.nickname|default:follow.following.userid }}</span>
+                                    <span class="follow-date">{{ follow.created_at|date:"Y.m.d" }} 팔로우</span>
+                                </div>
+                                <div class="follow-actions">
+                                    <a href="{% url 'other_user_profile' follow.following.id %}" class="btn btn-sm btn-outline">
+                                        프로필 보기
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="unfollowUser('{{ follow.following.userid }}')">
+                                        언팔로우
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="info-card">
+                        <p style="text-align: center; color: #6c757d;">팔로우한 사용자가 없습니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 팔로워 목록 -->
+            <div class="follow-section">
+                <h3>📥 나를 팔로우한 사람 ({{ followers_count|default:0 }}명)</h3>
+                {% if followers_list %}
+                    <div class="info-card">
+                        {% for follow in followers_list %}
+                            <div class="follow-item">
+                                <div class="follow-user-info">
+                                    <span class="follow-username">{{ follow.follower.nickname|default:follow.follower.userid }}</span>
+                                    <span class="follow-date">{{ follow.created_at|date:"Y.m.d" }} 팔로우함</span>
+                                </div>
+                                <div class="follow-actions">
+                                    <a href="{% url 'other_user_profile' follow.follower.id %}" class="btn btn-sm btn-outline">
+                                        프로필 보기
+                                    </a>
+                                    {% if follow.follower in following_users %}
+                                        <button class="btn btn-sm btn-danger" onclick="unfollowUser('{{ follow.follower.userid }}')">
+                                            언팔로우
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-primary" onclick="followUser('{{ follow.follower.userid }}')">
+                                            팔로우 백
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="info-card">
+                        <p style="text-align: center; color: #6c757d;">나를 팔로우한 사용자가 없습니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -186,6 +275,73 @@ function deleteAccount() {
             window.location.href = "{% url 'profile_delete' %}";
         }
     }
+}
+
+// 추가된 팔로우 관련 함수들
+// 사용자 팔로우
+function followUser(userid) {
+    if (confirm(`${userid}님을 팔로우하시겠습니까?`)) {
+        fetch(`{% url 'follow_user' 'dummy' %}`.replace('dummy', userid), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // 페이지 새로고침으로 변경사항 반영
+            } else {
+                alert('팔로우에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다.');
+        });
+    }
+}
+
+// 사용자 언팔로우
+function unfollowUser(userid) {
+    if (confirm(`${userid}님을 언팔로우하시겠습니까?`)) {
+        fetch(`{% url 'unfollow_user' 'dummy' %}`.replace('dummy', userid), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // 페이지 새로고침으로 변경사항 반영
+            } else {
+                alert('언팔로우에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다.');
+        });
+    }
+}
+
+// CSRF 토큰 가져오기 함수
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
 {% endblock %}

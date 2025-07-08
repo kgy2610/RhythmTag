@@ -94,6 +94,9 @@ class MyProfileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        user = self.request.user
+
         context["user_posts"] = Post.objects.filter(user=self.request.user).order_by(
             "-created_at"
         )[:5]
@@ -102,6 +105,18 @@ class MyProfileView(LoginRequiredMixin, TemplateView):
         # 팔로워/팔로잉 수 추가
         context["followers_count"] = self.request.user.followers_count
         context["following_count"] = self.request.user.following_count
+
+        # 내가 팔로우한 사람들 (팔로잉 목록)
+        following_list = Follow.objects.filter(follower=user).select_related('following').order_by('-created_at')
+        context["following_list"] = following_list
+        
+        # 나를 팔로우한 사람들 (팔로워 목록)
+        followers_list = Follow.objects.filter(following=user).select_related('follower').order_by('-created_at')
+        context["followers_list"] = followers_list
+        
+        # 팔로우 백 버튼을 위해 내가 팔로우한 사용자들의 목록
+        following_users = [follow.following for follow in following_list]
+        context["following_users"] = following_users
 
         return context
 
@@ -176,8 +191,6 @@ class AccountDeleteView(LoginRequiredMixin, DeleteView):
 @login_required
 @require_POST
 def toggle_follow(request, user_id):
-    print(f"팔로우 요청 받음: user_id={user_id}")  # 👈 디버깅
-    print(f"요청 사용자: {request.user}")          # 👈 디버깅
     target_user = get_object_or_404(User, id=user_id)
 
     if request.user == target_user:
@@ -213,3 +226,69 @@ def toggle_follow(request, user_id):
     else:
         messages.success(request, message)
         return redirect("other_user_profile", user_id=user_id)
+
+
+@login_required
+@require_POST
+def follow_user(request, userid):
+    """
+    사용자 아이디를 통해 팔로우하는 함수
+    """
+    target_user = get_object_or_404(User, userid=userid)
+    
+    if request.user == target_user:
+        return JsonResponse({"success": False, "message": "자기 자신을 팔로우할 수 없습니다."}, status=400)
+    
+    # 이미 팔로우하고 있는지 확인
+    if Follow.objects.filter(follower=request.user, following=target_user).exists():
+        return JsonResponse({"success": False, "message": "이미 팔로우하고 있습니다."}, status=400)
+    
+    # 팔로우 생성
+    Follow.objects.create(follower=request.user, following=target_user)
+    
+    return JsonResponse({
+        "success": True,
+        "message": f"{target_user.nickname}님을 팔로우했습니다.",
+        "followers_count": target_user.followers_count
+    })
+
+
+# 언팔로우 함수 (사용자 아이디로)
+@login_required
+@require_POST
+def unfollow_user(request, userid):
+    """
+    사용자 아이디를 통해 언팔로우하는 함수
+    """
+    target_user = get_object_or_404(User, userid=userid)
+    
+    if request.user == target_user:
+        return JsonResponse({"success": False, "message": "자기 자신을 언팔로우할 수 없습니다."}, status=400)
+    
+    # 팔로우 관계 찾기 및 삭제
+    try:
+        follow_obj = Follow.objects.get(follower=request.user, following=target_user)
+        follow_obj.delete()
+        return JsonResponse({
+            "success": True,
+            "message": f"{target_user.nickname}님을 언팔로우했습니다.",
+            "followers_count": target_user.followers_count
+        })
+    except Follow.DoesNotExist:
+        return JsonResponse({"success": False, "message": "팔로우하지 않은 사용자입니다."}, status=400)
+
+# 사용자 목록 뷰 (팔로우할 사용자를 찾기 위한 페이지)
+class UserListView(TemplateView):
+    template_name = "accounts/user_list.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # 현재 로그인한 사용자를 제외한 모든 사용자
+        if self.request.user.is_authenticated:
+            users = User.objects.exclude(id=self.request.user.id).order_by('-created_at')
+        else:
+            users = User.objects.all().order_by('-created_at')
+        
+        context['users'] = users
+        return context
