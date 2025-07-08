@@ -14,12 +14,25 @@ from django.urls import reverse_lazy
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from accounts.models import Follow
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+from .models import Post, Comment
 
 # 로컬 모듈
 from .models import Post, Blog, Like
 from .forms import PostForm, CustomPasswordChangeForm, AccountDeleteForm
 
 User = get_user_model()
+
+try:
+    from .music_post_create import music_post_create
+    AI_AVAILABLE = True
+    print("✓ AI 모듈 로드 성공")
+except ImportError as e:
+    print(f"✗ AI 모듈 로드 실패: {e}")
+    AI_AVAILABLE = False
+    music_post_create = None
 
 # 게시글 작성
 class PostWriteView(CreateView):
@@ -61,10 +74,10 @@ class PostWriteView(CreateView):
             messages.error(self.request, '저장 중 오류가 발생했습니다.')
             return self.form_invalid(form)
     
-    def form_invalid(self, form):
-        print(f"폼 오류: {form.errors}")  # 디버깅용
-        messages.error(self.request, '입력 내용을 확인해주세요.')
-        return super().form_invalid(form)
+    # def form_invalid(self, form):
+    #     print(f"폼 오류: {form.errors}")  # 디버깅용
+    #     messages.error(self.request, '입력 내용을 확인해주세요.')
+    #     return super().form_invalid(form)
 
 
 # 게시글 목록
@@ -212,26 +225,122 @@ class PostDetailView(DetailView):
             context['user_liked'] = self.object.likes.filter(user=self.request.user).exists()
         else:
             context['user_liked'] = False
-        
-        # 디버깅용 로그
-        print(f"게시글 조회: {self.object.title}")
-        print(f"현재 조회수: {getattr(self.object, 'view_count', '필드 없음')}")
+
+        # 댓글 목록 추가
+        context['comments'] = self.object.comments.select_related('user').all()
 
         return context
+    
+# 댓글 달기
+@login_required
+@require_POST
+def add_comment(request, pk):  # pk 파라미터 사용 (DetailView와 일관성 유지)
+    post = get_object_or_404(Post, pk=pk)
+    comment_text = request.POST.get('comment', '').strip()
+    
+    if comment_text:
+        comment = Comment.objects.create(
+            post=post,
+            user=request.user,
+            comment=comment_text
+        )
+        
+        # AJAX 요청인 경우 JSON 응답
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'comment': {
+                    'id': comment.id,
+                    'user_nickname': request.user.nickname,
+                    'comment': comment.comment,
+                    'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M')
+                }
+            })
+    
+    return redirect('post_detail', pk=pk)  # pk 사용
+
+# 댓글 수정
+@login_required
+@require_POST
+def edit_comment(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    
+    # 작성자 본인만 수정 가능
+    if comment.user != request.user:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': '권한이 없습니다.'})
+        return redirect('post_detail', pk=comment.post.pk)
+    
+    comment_text = request.POST.get('comment', '').strip()
+    
+    if comment_text:
+        comment.comment = comment_text
+        comment.save(update_fields=['comment', 'updated_at'])
+        
+        # AJAX 요청인 경우 JSON 응답
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'comment': {
+                    'id': comment.id,
+                    'comment': comment.comment,
+                    'updated_at': comment.updated_at.strftime('%Y-%m-%d %H:%M')
+                }
+            })
+    
+    return redirect('post_detail', pk=comment.post.pk)
+
+# 댓글 삭제
+@login_required
+@require_POST
+def delete_comment(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    post_pk = comment.post.pk
+    
+    # 작성자 본인만 삭제 가능
+    if comment.user != request.user:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': '권한이 없습니다.'})
+        return redirect('post_detail', pk=post_pk)
+    
+    comment.delete()
+    
+    # AJAX 요청인 경우 JSON 응답
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'comment_id': pk
+        })
+    
+    return redirect('post_detail', pk=post_pk)
 
 # 게시글 수정
 class PostUpdateView(LoginRequiredMixin, UpdateView):
-    # 게시글 수정 뷰
     model = Post
     form_class = PostForm
-    template_name = 'blog/post_form.html'  # 템플릿 경로 수정
+    template_name = 'blog/post_form.html'
     
     def get_queryset(self):
         # 자신의 글만 수정 가능
         return super().get_queryset().filter(user=self.request.user)
     
+    def dispatch(self, request, *args, **kwargs):
+        # 게시글 존재 여부 확인
+        try:
+            post = Post.objects.get(pk=kwargs['pk'])
+        except Post.DoesNotExist:
+            messages.error(request, '존재하지 않는 게시글입니다.')
+            return redirect('post_list')
+        
+        # 작성자 권한 확인
+        if post.user != request.user:
+            messages.error(request, '본인이 작성한 글만 수정할 수 있습니다.')
+            return redirect('post_detail', pk=post.pk)
+        
+        return super().dispatch(request, *args, **kwargs)
+    
     def form_valid(self, form):
-        # 태그 업데이트는 form.save()에서 자동으로 처리됨
+        messages.success(self.request, '게시글이 성공적으로 수정되었습니다.')
         return super().form_valid(form)
 
 
@@ -241,9 +350,24 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'blog/post_delete.html'
     success_url = reverse_lazy('post_list')
     
-    def get_queryset(self):
-        # 자신의 글만 삭제 가능
-        return super().get_queryset().filter(user=self.request.user)
+    def dispatch(self, request, *args, **kwargs):
+        # 게시글 존재 여부 확인
+        try:
+            post = Post.objects.get(pk=kwargs['pk'])
+        except Post.DoesNotExist:
+            messages.error(request, '존재하지 않는 게시글입니다.')
+            return redirect('post_list')
+        
+        # 작성자 권한 확인
+        if post.user != request.user:
+            messages.error(request, '본인이 작성한 글만 삭제할 수 있습니다.')
+            return redirect('post_detail', pk=post.pk)
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, '게시글이 성공적으로 삭제되었습니다.')
+        return super().delete(request, *args, **kwargs)
 
 
 # 블로그 생성
@@ -526,3 +650,90 @@ def youtube_thumbnail_url(self):
             return None
         return f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
     return None
+
+# AI 블로그 생성 기능
+@login_required
+@require_http_methods(["POST"])
+def generate_ai_blog(request):
+    """
+    AI를 사용하여 음악 블로그를 생성하는 AJAX 뷰
+    """
+    # AI 모듈 사용 가능 여부 확인
+    if not AI_AVAILABLE or music_post_create is None:
+        return JsonResponse({
+            'success': False,
+            'error': 'AI 블로그 생성 기능을 사용할 수 없습니다. 관리자에게 문의하세요.'
+        }, status=503)  # 503 Service Unavailable
+    
+    try:
+        # JSON 데이터 파싱
+        data = json.loads(request.body)
+        artist = data.get('artist', '').strip()
+        song_title = data.get('song_title', '').strip()
+        youtube_link = data.get('youtube_link', '').strip()
+        
+        print(f"AI 블로그 생성 요청: {artist} - {song_title}")  # 디버깅용
+        
+        # 입력값 검증
+        if not all([artist, song_title, youtube_link]):
+            return JsonResponse({
+                'success': False,
+                'error': '가수명, 노래제목, 유튜브 링크를 모두 입력해주세요.'
+            }, status=400)
+        
+        # 유튜브 링크 간단 검증
+        if 'youtube.com' not in youtube_link and 'youtu.be' not in youtube_link:
+            return JsonResponse({
+                'success': False,
+                'error': '올바른 유튜브 링크를 입력해주세요.'
+            }, status=400)
+        
+        # AI 블로그 생성
+        try:
+            blog_content = music_post_create(artist, song_title, youtube_link)
+            
+            # 생성 결과 확인
+            if not blog_content or blog_content.strip() == "":
+                return JsonResponse({
+                    'success': False,
+                    'error': 'AI가 블로그 내용을 생성하지 못했습니다. 다시 시도해주세요.'
+                }, status=500)
+            
+            # 오류 메시지 체크
+            if blog_content.startswith('블로그 생성 중 오류가 발생했습니다:'):
+                print(f"AI 생성 오류: {blog_content}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                }, status=500)
+            
+            print("AI 블로그 생성 성공!")
+            
+            return JsonResponse({
+                'success': True,
+                'blog_content': blog_content,
+                'artist': artist,
+                'song_title': song_title,
+                'youtube_link': youtube_link
+            })
+            
+        except Exception as ai_error:
+            print(f"AI 함수 실행 오류: {ai_error}")
+            return JsonResponse({
+                'success': False,
+                'error': 'AI 블로그 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+            }, status=500)
+        
+    except json.JSONDecodeError:
+        print("JSON 파싱 오류")
+        return JsonResponse({
+            'success': False,
+            'error': '요청 데이터 형식이 올바르지 않습니다.'
+        }, status=400)
+        
+    except Exception as e:
+        print(f"AI 블로그 생성 중 예외 발생: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '서버 오류가 발생했습니다. 관리자에게 문의하세요.'
+        }, status=500)

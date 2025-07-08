@@ -1,6 +1,6 @@
 # accounts/views.py
 
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import TemplateView, FormView, DetailView, UpdateView, DeleteView
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,7 +12,7 @@ from django.contrib.auth.views import PasswordChangeView as DjangoPasswordChange
 from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse_lazy
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, AccountDeleteForm
 from .models import User, Follow
 from blog.models import Post
 
@@ -174,17 +174,65 @@ class PasswordChangeView(LoginRequiredMixin, DjangoPasswordChangeView):
         return super().form_valid(form)
 
 # 계정 삭제 뷰
-class AccountDeleteView(LoginRequiredMixin, DeleteView):
-    model = User
-    template_name = 'accounts/account_delete.html'
-    success_url = reverse_lazy('main_page')
+class AccountDeleteView(LoginRequiredMixin, View):
+    template_name = 'accounts/profile_delete.html'
+    form_class = AccountDeleteForm
     
-    def get_object(self):
-        return self.request.user  # 현재 로그인한 사용자만 삭제 가능
+    def get_context_data(self):
+        """계정 통계 정보 가져오기"""
+        user = self.request.user
+        
+        # 블로그 수 (사용자당 하나의 블로그)
+        blog_count = getattr(user, 'blog', None) and 1 or 0
+        
+        # 게시글 수
+        post_count = user.post_set.count() if hasattr(user, 'post_set') else 0
+        
+        # 좋아요 수 (사용자가 누른 좋아요)
+        like_count = user.like_set.count() if hasattr(user, 'like_set') else 0
+        
+        return {
+            'blog_count': blog_count,
+            'post_count': post_count,
+            'like_count': like_count,
+        }
     
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, '계정이 성공적으로 삭제되었습니다.')
-        return super().delete(request, *args, **kwargs)
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(user=request.user)
+        context = {
+            'form': form,
+            **self.get_context_data()
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(user=request.user, data=request.POST)
+        
+        if form.is_valid():
+            # 폼이 유효하면 계정 삭제 진행
+            user = request.user
+            
+            try:
+                # 로그아웃 먼저 수행
+                logout(request)
+                
+                # 사용자 삭제 (관련 데이터도 CASCADE로 삭제됨)
+                user.delete()
+                
+                messages.success(request, '계정이 성공적으로 삭제되었습니다. 그동안 이용해 주셔서 감사했습니다.')
+                return redirect('main_page')  # 또는 적절한 메인 페이지로
+                
+            except Exception as e:
+                messages.error(request, '계정 삭제 중 오류가 발생했습니다. 다시 시도해주세요.')
+                # 로그아웃된 상태이므로 로그인 페이지로 리다이렉트
+                return redirect('login')
+        
+        # 폼이 유효하지 않으면 다시 페이지 표시
+        context = {
+            'form': form,
+            **self.get_context_data()
+        }
+        return render(request, self.template_name, context)
 
 
 # 팔로우 토글 함수 (Ajax 지원)

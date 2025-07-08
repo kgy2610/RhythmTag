@@ -24,6 +24,7 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['title', 'content', 'link']
+        help_text='블로그 작성이 어려우신가요? \nAI 블로그 자동 생성을 통해, 글을 쉽게 작성해보세요!',
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -32,12 +33,15 @@ class PostForm(forms.ModelForm):
             'content': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 10,
-                'placeholder': '내용을 입력하세요'
+                'placeholder': '내용을 입력하세요.'
             }),
             'link': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': '링크를 입력하세요'
             })
+        }
+        help_text = {
+            'content' : '블로그 작성이 어려우신가요?\nAI 글 자동생성을 통해, 글을 쉽게 작성해보세요!'
         }
     
     def __init__(self, *args, **kwargs):

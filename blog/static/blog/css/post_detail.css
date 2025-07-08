@@ -168,6 +168,13 @@ section{
     border-bottom: 2px solid #C084FC;
     border-top: 2px solid #C084FC;
 }
+#comment-input button[type="submit"]{
+    width: 80px; height: 30px;
+    background-color: #7C3AED;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+}
 #comment-input input[type="text"]{
     width: 700px; height: 30px;
     padding-left: 10px;
@@ -217,12 +224,112 @@ section{
 
 .post-author{
     display: flex;
-    justify-content: flex-end;
-    width: 1000px;height: 60px;
-    line-height: 75px;
+    justify-content: space-between;  
+    align-items: center;             
+    width: 1000px;
+    height: 30px;
+    margin-top: 15px;
 }
+
 .post-author a{
     text-align: right;
     box-sizing: border-box;
     margin-right: 10px;
+}
+
+/* 조회수 스타일 추가 */
+.view-count {
+    color: #6b7280;                 
+    font-size: 14px;                 
+    font-weight: normal;             
+    margin-left: 10px;               
+    line-height: 1;                  
+}
+.comment-actions {
+    display: inline-block;
+}
+
+.edit-btn, .delete-btn, .cancel-edit {
+    background: none;
+    border: none;
+    color: #7C3AED;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 5px;
+}
+
+.edit-btn:hover, .delete-btn:hover, .cancel-edit:hover {
+    text-decoration: underline;
+}
+
+.delete-btn {
+    color: #dc2626;
+}
+
+.edit-form {
+    width: 1000px; height: 30px;
+    padding: 10px;
+    border-radius: 5px;
+    border-radius: 30px;
+}
+
+.edit-comment-form{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.edit-comment-form > button[type="submit"]{
+    background-color: #7C3AED;
+    border-radius: 10px;
+    border: none;
+    color: #fff;
+}
+
+.edit-form input[type="text"] {
+    width: 70%;
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.edit-form button {
+    padding: 5px 10px;
+    margin-right: 5px;
+}
+
+.edited-mark {
+    color: #6b7280;
+    font-style: italic;
+    font-size: 12px;
+}
+
+.comment-content{
+    width: 1000px;
+    height: 40px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+}
+
+#user-name{
+    width: 80px;
+}
+#user-content{
+    width: 600px;
+    font-size: 16px;
+}
+#user-writeDate{
+    width: 140px;
+    font-size: 14px;
+}
+
+#no-comments{
+    width: 1000px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 100px;
 }

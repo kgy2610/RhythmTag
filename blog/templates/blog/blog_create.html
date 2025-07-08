@@ -27,7 +27,6 @@
             {% csrf_token %}
             
             <div style="margin-bottom: 20px;">
-                <!-- 수정: 필드명을 blog_name으로 변경 -->
                 <label for="id_blog_name">블로그 이름 *</label>
                 <input type="text" 
                        name="blog_name" 
@@ -48,16 +47,16 @@
             <div style="margin-bottom: 20px;">
                 <!-- 수정: 필드명을 description으로 유지 -->
                 <label for="id_description">블로그 소개</label>
-                <textarea name="description" 
+                <textarea name="blog_description" 
                           id="id_description" 
                           rows="3" 
                           placeholder="블로그에 대한 간단한 소개를 작성해주세요."
                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;{% if not user.is_authenticated %} background-color: #f8f9fa; cursor: not-allowed;{% endif %}"
                           {% if not user.is_authenticated %}readonly{% endif %}></textarea>
                 <!-- 폼 에러 표시 -->
-                {% if form.description.errors %}
+                {% if form.blog_description.errors %}
                     <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
-                        {{ form.description.errors }}
+                        {{ form.blog_description.errors }}
                     </div>
                 {% endif %}
             </div>

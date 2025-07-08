@@ -79,7 +79,8 @@
     align-content: flex-start;
 }
 .post-card{
-    width: 310px; height: 500px;
+    width: 310px; min-height: 500px;
+    height: auto;
     text-align: left;
     margin-left: 40px;
     margin-bottom: 30px;
@@ -99,6 +100,7 @@
     width: 310px; height: 310px;
     margin-top: 20px;
     background-color: whitesmoke;
+    flex-shrink: 0;
 }
 .post-card #thumnail img{
     width: 100%;
@@ -106,22 +108,76 @@
     object-fit: cover;
     display: block;
 }
-.post-card #info, #post-content, #tags{
+.post-card #info, #post-content{
     padding-left: 10px;
     margin-top: 20px;
+    flex-shrink: 0;
 }
 .post-card #info{
     font-weight: bold;
     display: flex;
     justify-content: space-between;
 }
+.post-card #info span{
+    display: block;
+    max-width: 200px; /* 원하는 너비로 조정 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
 .post-card #info #likes{
     margin-right: 10px;
 }
 .post-card #post-content{
-    height: 50px;
+    height: auto;
+    min-height: 50px;
 }
 
+.post-card #tags {
+    padding-left: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-right: 10px;
+    max-width: 290px;
+}
+
+/* 개별 태그 스타일 */
+.tag-item {
+    background-color: #A78BFA;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: inline-block;
+    margin: 0;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.tag-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(167, 139, 250, 0.4);
+    background-color: #8B5CF6;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* 태그가 없을 때 표시 */
+.no-tags {
+    color: #999;
+    font-size: 12px;
+    font-style: italic;
+}
 /* --------------------------------------- */
 
 /* 메시지만 추가 스타일 */

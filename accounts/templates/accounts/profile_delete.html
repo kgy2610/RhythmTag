@@ -122,12 +122,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('deleteForm');
     const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
     const confirmCheckbox = document.getElementById('{{ form.confirm_delete.id_for_label }}');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // 실시간 폼 유효성 검사
+    function validateForm() {
+        const password = passwordInput.value.trim();
+        const confirmed = confirmCheckbox.checked;
+        
+        // 둘 다 유효한 경우에만 버튼 활성화
+        if (password && confirmed) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-disabled');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-disabled');
+        }
+    }
+
+    // 입력 이벤트 리스너
+    passwordInput.addEventListener('input', validateForm);
+    confirmCheckbox.addEventListener('change', validateForm);
+
+    // 초기 폼 상태 설정
+    validateForm();
 
     // 폼 제출 시 최종 확인
     form.addEventListener('submit', function(e) {
-        const password = passwordInput.value;
+        const password = passwordInput.value.trim();
         const confirmed = confirmCheckbox.checked;
 
+        // 클라이언트 측 검증
         if (!password) {
             e.preventDefault();
             alert('🔒 비밀번호를 입력해주세요.');
@@ -142,24 +166,41 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        if (!confirm('🚨 정말로 회원탈퇴를 진행하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+        // 최종 확인 대화상자
+        if (!confirm('🚨 정말로 회원탈퇴를 진행하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다!\n⚠️ 모든 게시글과 데이터가 영구 삭제됩니다!')) {
+            e.preventDefault();
+            return false;
+        }
+
+        // 중복 제출 방지
+        if (submitBtn.disabled) {
             e.preventDefault();
             return false;
         }
 
         // 폼 제출 중 버튼 비활성화
-        const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '🔄 처리 중...';
+        submitBtn.innerHTML = '🔄 계정 삭제 중...';
+        submitBtn.classList.add('btn-processing');
 
         return true;
     });
 
-    // 비밀번호 입력 시 엔터키로 제출
+    // 비밀번호 입력 시 엔터키 처리
     passwordInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            form.submit();
+            if (!submitBtn.disabled) {
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+
+    // 페이지 이탈 시 경고 (폼에 내용이 있을 때)
+    window.addEventListener('beforeunload', function(e) {
+        if (passwordInput.value.trim() || confirmCheckbox.checked) {
+            e.preventDefault();
+            e.returnValue = '입력된 내용이 있습니다. 정말로 페이지를 떠나시겠습니까?';
         }
     });
 });

@@ -18,6 +18,7 @@
                 {{ post.title }}
             </div>
             <div class="post-author">
+                <div class="view-count">조회수 : {{ post.view_count }}</div>
                 <a href="{% url 'other_user_profile' user_id=post.user.id %}" style="color: #7C3AED; text-decoration: none; font-weight: 600;">
                     {{ post.user.nickname }}님의 게시글
                 </a>
@@ -64,35 +65,268 @@
                     {% endif %}
                 </div>
                 <div id="comment">
-                    🗨️ {{ post.comment_set.count }}
+                    🗨️ {{ comments.count }}
                 </div>
             </div>
 
-            <div class="content-option">
-                <div id="content-update">
-                    <a href="{% url 'post_update' post.id %}">수정</a>
-                </div>
-                |
-                <div id="content-delete">
-                    <a href="{% url 'post_delete' post.id %}">삭제</a>
-                </div>
-            </div>
+            {% if user.is_authenticated %}
+                {% if user == post.user %}
+                    <div class="content-option">
+                        <div id="content-update">
+                            <a href="{% url 'post_update' post.id %}">수정</a>
+                        </div>
+                        |
+                        <div id="content-delete">
+                            <a href="{% url 'post_delete' post.id %}" 
+                            onclick="return confirm('정말로 삭제하시겠습니까?')">삭제</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- 다른 사용자의 글일 때는 아무것도 표시하지 않음 -->
+                {% endif %}
+            {% else %}
+                <!-- 로그인하지 않은 경우도 아무것도 표시하지 않음 -->
+            {% endif %}
         </div>
 
         <div class="comment-area">
-            <div id="comment-input">
-                <input type="text" placeholder="댓글을 입력하세요">
+            {% if user.is_authenticated %}
+            <div id="comment-form">
+                <form id="commentForm" method="post" action="{% url 'add_comment' post.pk %}">
+                    {% csrf_token %}
+                    <div id="comment-input">
+                        <input type="text" name="comment" placeholder="댓글을 입력하세요" required>
+                        <button type="submit">작 성</button>
+                    </div>
+                </form>
             </div>
+            {% else %}
+            <div id="comment-login-message">
+                <a href="{% url 'login' %}">로그인</a>하여 댓글을 작성하세요.
+            </div>
+            {% endif %}
 
-            {% for comment in post.comment_set.all %}
-            <div class="comment-reply">
-                <div id="user-name">{{ comment.nickName }}</div>
-                |
-                <div id="user-content">{{ comment.comment }}</div>
-                |
-                <div id="user-writeDate">{{ comment.writeDate }}</div>
+            <div id="comments-list">
+                {% for comment in comments %}
+                <div class="comment-reply" data-comment-id="{{ comment.id }}">
+                    <div class="comment-content">
+                        <div id="user-name">{{ comment.user.nickname }}</div>
+                        |
+                        <div id="user-content" class="comment-text">{{ comment.comment }}</div>
+                        |
+                        <div id="user-writeDate" class="date-section">
+                            <div class="comment-date">{{ comment.created_at|date:"Y.m.d H:i" }}</div>
+                            {% if comment.updated_at != comment.created_at %}
+                                <div class="edited-mark">(수정됨)</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 수정/삭제 버튼 (작성자만 표시) -->
+                        {% if user.is_authenticated and comment.user == user %}
+                        <div class="comment-actions">
+                            |
+                            <button class="edit-btn" data-comment-id="{{ comment.id }}">수정</button>
+                            <button class="delete-btn" data-comment-id="{{ comment.id }}">삭제</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 수정 폼 (기본적으로 숨김) -->
+                    <div class="edit-form" id="edit-form-{{ comment.id }}" style="display: none;">
+                        <form class="edit-comment-form" data-comment-id="{{ comment.id }}" method="post" action="{% url 'edit_comment' comment.id %}">
+                            {% csrf_token %}
+                            <input type="text" name="comment" value="{{ comment.comment }}" required>
+                            <button type="submit">저장</button>
+                            <button type="button" class="cancel-edit" data-comment-id="{{ comment.id }}">취소</button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div id="no-comments">
+                    아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </section>
+    <script>
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const commentInput = this.querySelector('input[name="comment"]');
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 새 댓글을 화면에 추가
+                    const commentsList = document.getElementById('comments-list');
+                    const noComments = document.getElementById('no-comments');
+                    
+                    if (noComments) {
+                        noComments.remove();
+                    }
+                    
+                    const newComment = document.createElement('div');
+                    newComment.className = 'comment-reply';
+                    newComment.innerHTML = `
+                        <div id="user-name">${data.comment.user_nickname}</div>
+                        |
+                        <div id="user-content">${data.comment.comment}</div>
+                        |
+                        <div id="user-writeDate">${data.comment.created_at}</div>
+                    `;
+                    
+                    commentsList.appendChild(newComment);
+                    
+                    // 입력 필드 초기화
+                    commentInput.value = '';
+                    
+                    // 댓글 수 업데이트
+                    const commentCount = document.querySelector('#comment');
+                    const currentCount = parseInt(commentCount.textContent.match(/\d+/)[0]);
+                    commentCount.textContent = `🗨️ ${currentCount + 1}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('댓글 작성 중 오류가 발생했습니다.');
+            });
+        });
+        // 수정 버튼 클릭 이벤트 (새로 추가)
+        document.addEventListener('click', function(e) {
+            // 수정 버튼 클릭
+            if (e.target.classList.contains('edit-btn')) {
+                const commentId = e.target.getAttribute('data-comment-id');
+                const commentContent = document.querySelector(`[data-comment-id="${commentId}"] .comment-content`);
+                const editForm = document.getElementById(`edit-form-${commentId}`);
+                
+                commentContent.style.display = 'none';
+                editForm.style.display = 'block';
+            }
+            
+            // 수정 취소 버튼
+            if (e.target.classList.contains('cancel-edit')) {
+                const commentId = e.target.getAttribute('data-comment-id');
+                const commentContent = document.querySelector(`[data-comment-id="${commentId}"] .comment-content`);
+                const editForm = document.getElementById(`edit-form-${commentId}`);
+                
+                commentContent.style.display = 'block';
+                editForm.style.display = 'none';
+            }
+            
+            // 삭제 버튼 클릭 (수정된 부분)
+            if (e.target.classList.contains('delete-btn')) {
+                const commentId = e.target.getAttribute('data-comment-id');
+                
+                if (confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    // URL을 올바르게 생성 (수정된 부분)
+                    const deleteUrl = "{% url 'delete_comment' 0 %}".replace('0', commentId);
+                    
+                    fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                    .then(response => {
+                        // JSON 파싱 전에 응답 상태 확인 (수정된 부분)
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // 댓글 요소 제거
+                            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                            commentElement.remove();
+                            
+                            // 댓글 수 업데이트
+                            const commentCount = document.querySelector('#comment');
+                            const currentCount = parseInt(commentCount.textContent.match(/\d+/)[0]);
+                            const newCount = currentCount - 1;
+                            commentCount.textContent = `🗨️ ${newCount}`;
+                            
+                            // 댓글이 없으면 메시지 표시
+                            const commentsContainer = document.getElementById('comments-list');
+                            if (commentsContainer.children.length === 0) {
+                                commentsContainer.innerHTML = '<div id="no-comments">첫 번째 댓글을 작성해보세요!</div>';
+                            }
+                        } else {
+                            alert(data.error || '댓글 삭제 중 오류가 발생했습니다.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('댓글 삭제 중 오류가 발생했습니다: ' + error.message);
+                    });
+                }
+            }
+        });
+
+        // 댓글 수정 폼 제출 이벤트 (수정된 부분)
+        document.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('edit-comment-form')) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const commentId = e.target.getAttribute('data-comment-id');
+                
+                fetch(e.target.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => {
+                    // JSON 파싱 전에 응답 상태 확인 (수정된 부분)
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 댓글 내용 업데이트
+                        const commentText = document.querySelector(`[data-comment-id="${commentId}"] .comment-text`);
+                        const dateSection = document.querySelector(`[data-comment-id="${commentId}"] .date-section`);
+                        
+                        commentText.textContent = data.comment.comment;
+                        dateSection.innerHTML = `
+                                                    <div class="comment-date">${data.comment.updated_at}</div>
+                                                    <div class="edited-mark">(수정됨)</div>
+                                                `;
+                        
+                        // 수정 폼 숨기고 댓글 내용 보이기
+                        const commentContent = document.querySelector(`[data-comment-id="${commentId}"] .comment-content`);
+                        const editForm = document.getElementById(`edit-form-${commentId}`);
+                        
+                        commentContent.style.display = 'flex';
+                        editForm.style.display = 'none';
+                    } else {
+                        alert(data.error || '댓글 수정 중 오류가 발생했습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('댓글 수정 중 오류가 발생했습니다: ' + error.message);
+                });
+            }
+        });
+        </script>
 {% endblock %}

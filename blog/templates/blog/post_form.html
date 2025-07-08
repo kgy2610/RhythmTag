@@ -51,9 +51,30 @@
             </div>
 
             <div id="write-content" class="form-group">
+                <small>{{ form.content.help_text }}</small>
                 <label for="{{ form.content.id_for_label }}"></label>
                 {{ form.content }}
                 {{ form.content.errors }}
+            </div>
+
+            <div id="ai-section">
+                <div class="ai-section-title">
+                    <div class="ai-icon">AI</div>
+                    AI 음악 블로그 자동 생성
+                </div>
+                
+                <div id="ai-inputs">
+                    <input type="text" id="ai-artist" placeholder="가수명 (예: 아이유)" />
+                    <input type="text" id="ai-song" placeholder="노래제목 (예: 좋은 날)" />
+                    <input type="text" id="ai-link" placeholder="유튜브 링크" />
+                </div>
+                
+                <button type="button" id="ai-generate-btn">🎵 AI로 블로그 생성하기</button>
+                
+                <div id="ai-loading">
+                    <div class="loading-spinner"></div>
+                    <p>AI가 멋진 블로그를 작성하고 있습니다... ✨</p>
+                </div>
             </div>
 
             <div id="write-link" class="form-group">
@@ -81,7 +102,131 @@
             
             console.log('페이지 로드됨. 인증 상태:', isAuthenticated);
             
-            // 폼 요소 확인
+            // AI 생성 버튼 이벤트
+            const aiGenerateBtn = document.getElementById('ai-generate-btn');
+            const aiLoading = document.getElementById('ai-loading');
+            
+            aiGenerateBtn.addEventListener('click', async function() {
+                // 입력값 가져오기
+                const artist = document.getElementById('ai-artist').value.trim();
+                const song = document.getElementById('ai-song').value.trim();
+                const link = document.getElementById('ai-link').value.trim();
+                
+                // 입력값 검증
+                if (!artist || !song || !link) {
+                    alert('가수명, 노래제목, 유튜브 링크를 모두 입력해주세요.');
+                    return;
+                }
+                
+                // 유튜브 링크 검증 (간단한 검증)
+                if (!link.includes('youtube.com') && !link.includes('youtu.be')) {
+                    alert('올바른 유튜브 링크를 입력해주세요.');
+                    return;
+                }
+                
+                // 로딩 상태 표시
+                aiGenerateBtn.disabled = true;
+                aiGenerateBtn.textContent = '생성 중...';
+                aiLoading.style.display = 'block';
+                
+                try {
+                    // CSRF 토큰 가져오기
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    // AI 블로그 생성 요청
+                    const response = await fetch('{% url "generate_ai_blog" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                        },
+                        body: JSON.stringify({
+                            artist: artist,
+                            song_title: song,
+                            youtube_link: link
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // CKEditor에 내용 삽입
+                        const contentField = document.querySelector('textarea[name="content"]') || 
+                                           document.querySelector('#id_content');
+                        
+                        if (contentField) {
+                            console.log('Content 필드 찾음:', contentField.id);
+                            
+                            // CKEditor 인스턴스 직접 접근
+                            const editorInstance = window.CKEDITOR.instances['id_content'];
+                            
+                            if (editorInstance) {
+                                console.log('CKEditor 인스턴스 찾음');
+                                
+                                // 텍스트를 HTML로 변환
+                                const htmlContent = data.blog_content
+                                    .replace(/\n\n/g, '</p><p>')  // 빈 줄은 문단 구분
+                                    .replace(/\n/g, '<br>')       // 일반 줄바꿈은 <br>
+                                    .replace(/^/, '<p>')          // 시작에 <p> 추가
+                                    .replace(/$/, '</p>');        // 끝에 </p> 추가
+                                
+                                // 에디터가 준비된 상태인지 확인
+                                if (editorInstance.status === 'ready') {
+                                    editorInstance.setData(htmlContent);
+                                    console.log('✓ CKEditor에 즉시 내용 삽입 성공');
+                                } else {
+                                    // 에디터가 준비될 때까지 대기
+                                    console.log('에디터 준비 대기 중...');
+                                    editorInstance.on('instanceReady', function() {
+                                        editorInstance.setData(htmlContent);
+                                        console.log('✓ CKEditor에 지연 삽입 성공');
+                                    });
+                                }
+                            } else {
+                                console.log('CKEditor 인스턴스 없음, textarea에 직접 삽입');
+                                contentField.value = data.blog_content;
+                            }
+                        } else {
+                            console.error('Content 필드를 찾을 수 없습니다.');
+                        }
+                        
+                        // 제목과 링크도 자동으로 채우기
+                        const titleField = document.querySelector('input[name="title"]') || 
+                                         document.querySelector('#id_title');
+                        const linkField = document.querySelector('input[name="link"]') || 
+                                        document.querySelector('#id_link');
+                        
+                        if (titleField && !titleField.value.trim()) {
+                            titleField.value = `${artist} - ${song} 추천`;
+                        }
+                        
+                        if (linkField && !linkField.value.trim()) {
+                            linkField.value = link;
+                        }
+                        
+                        alert('AI 블로그가 성공적으로 생성되었습니다! 📝✨');
+                        
+                        // AI 입력 필드들 초기화
+                        document.getElementById('ai-artist').value = '';
+                        document.getElementById('ai-song').value = '';
+                        document.getElementById('ai-link').value = '';
+                        
+                    } else {
+                        alert('블로그 생성 중 오류가 발생했습니다: ' + (data.error || '알 수 없는 오류'));
+                    }
+                    
+                } catch (error) {
+                    console.error('AI 블로그 생성 오류:', error);
+                    alert('블로그 생성 중 네트워크 오류가 발생했습니다.');
+                }
+                
+                // 로딩 상태 해제
+                aiGenerateBtn.disabled = false;
+                aiGenerateBtn.textContent = '🎵 AI로 블로그 생성하기';
+                aiLoading.style.display = 'none';
+            });
+            
+            // 기존 폼 제출 이벤트
             const form = document.getElementById('postForm');
             
             if (form) {
@@ -92,7 +237,7 @@
                     if (!isAuthenticated) {
                         e.preventDefault();
                         alert('로그인이 필요합니다.');
-                        window.location.href = "{% url 'login' %}";  // 또는 "/accounts/login/"
+                        window.location.href = "{% url 'login' %}";
                         return false;
                     }
 
@@ -112,7 +257,6 @@
                         return false;
                     }
                     
-                    // 로그인한 경우는 일반 폼 제출 진행
                     console.log('폼 제출 진행');
                 });
             }

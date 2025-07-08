@@ -102,11 +102,15 @@
                             </div>
                         </div>
                         <div id="post-content">
-                            {{ post.content|striptags|truncatewords:10|safe }}
+                            {{ post.content|striptags|truncatewords:8|safe }}
                         </div>
                         <div id="tags">
                             {% for tag in post.tags.all %}
-                                #{{ tag.name }} 
+                                <a href="?search=%23{{ tag.name }}" class="tag-item" onclick="event.stopPropagation();">
+                                    #{{ tag.name }}
+                                </a>
+                            {% empty %}
+                                <span class="no-tags">태그 없음</span>
                             {% endfor %}
                         </div>
                     </a>
@@ -114,8 +118,72 @@
                 {% endfor %}
             </div>
         {% endif %}
+    {% elif current_filter == 'follow' and user.is_authenticated %}
+        <!-- "팔로워/팔로잉" 탭 (로그인된 사용자) -->
+        {% if not posts %}
+            <!-- 팔로우 중인 사람의 글이 없는 경우 -->
+            <div class="no-content-message">
+                <h3>👥 현재 팔로우 중인 사람이 없습니다</h3>
+                <p>게시글을 둘러보고 마음에 드는 사용자를 팔로우 해보세요!</p>
+                <a href="?filter=famous" class="explore-btn">🔥 인기 게시글 둘러보기</a>
+            </div>
+        {% else %}
+            <!-- 팔로우 중인 사람들의 글 목록 표시 -->
+            <div id="post-list">
+                {% for post in posts %}
+                <div class="post-card">
+                    <a href="{% url 'post_detail' post.pk %}">
+                        <div id="thumnail">
+                            {% if post.youtube_thumbnail_url %}
+                                <img src="{{ post.youtube_thumbnail_url }}" alt="{{ post.title }}">
+                            {% else %}
+                                <div style="background-color: whitesmoke; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">썸네일 없음</div>
+                            {% endif %}
+                        </div>
+                        <div id="info">
+                            <span>{{ post.title|truncatechars:18 }}</span>
+                            <div id="likes">
+                                {% if user.is_authenticated %}
+                                    <button class="like-btn" 
+                                            data-post-id="{{ post.id }}" 
+                                            data-liked="{{ post.user_liked|yesno:'true,false' }}">
+                                        {% if post.user_liked %}
+                                            ❤️ {{ post.like_count }}
+                                        {% else %}
+                                            🤍 {{ post.like_count }}
+                                        {% endif %}
+                                    </button>
+                                {% else %}
+                                    ❤️ {{ post.like_count }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div id="post-content">
+                            {{ post.content|striptags|truncatewords:8|safe }}
+                        </div>
+                        <div id="tags">
+                            {% for tag in post.tags.all %}
+                                <a href="?search=%23{{ tag.name }}" class="tag-item" onclick="event.stopPropagation();">
+                                    #{{ tag.name }}
+                                </a>
+                            {% empty %}
+                                <span class="no-tags">태그 없음</span>
+                            {% endfor %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% elif current_filter == 'my' or current_filter == 'follow' %}
+        <!-- 로그인이 필요한 탭에 비로그인 사용자가 접근한 경우 -->
+        <div class="no-content-message">
+            <h3>🔐 로그인이 필요합니다</h3>
+            <p>{{ current_filter|yesno:'내가 작성한 글,팔로워/팔로잉' }} 기능을 이용하려면 로그인 후 이용해주세요.</p>
+            <a href="{% url 'login' %}" class="login-btn">🔑 로그인하기</a>
+        </div>
     {% else %}
-        <!-- 다른 탭들 -->
+        <!-- 다른 탭들 (인기가 많은 글 등) -->
         {% if not posts %}
             <div class="no-content-message">
                 <h3>아직 게시글이 없습니다.</h3>
@@ -152,11 +220,15 @@
                             </div>
                         </div>
                         <div id="post-content">
-                            {{ post.content|striptags|truncatewords:10|safe }}
+                            {{ post.content|striptags|truncatewords:8|safe }}
                         </div>
                         <div id="tags">
                             {% for tag in post.tags.all %}
-                                #{{ tag.name }} 
+                                <a href="?search=%23{{ tag.name }}" class="tag-item" onclick="event.stopPropagation();">
+                                    #{{ tag.name }}
+                                </a>
+                            {% empty %}
+                                <span class="no-tags">태그 없음</span>
                             {% endfor %}
                         </div>
                     </a>
@@ -165,6 +237,17 @@
             </div>
         {% endif %}
     {% endif %}
+        <!-- 로그인 필요 알림 모달 -->
+        <div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; text-align: center;">
+                <h3>🔐 로그인이 필요합니다</h3>
+                <p id="modalMessage"></p>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'login' %}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">로그인하기</a>
+                    <button onclick="closeLoginModal()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px;">닫기</button>
+                </div>
+            </div>
+        </div>
     {% endblock %}
 
     <script>
@@ -175,5 +258,24 @@
             setTimeout(() => messageContainer.remove(), 300);
         }
     }, 3000);
+
+    // 로그인 필요 알림 모달
+    function showLoginRequired(tabName) {
+        const modal = document.getElementById('loginModal');
+        const message = document.getElementById('modalMessage');
+        message.textContent = `${tabName} 기능을 이용하려면 로그인 후 이용해주세요.`;
+        modal.style.display = 'block';
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('loginModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLoginModal();
+        }
+    });
     </script>
 </html>

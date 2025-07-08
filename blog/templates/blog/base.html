@@ -10,57 +10,81 @@
     {% endblock %}
 </head>
 <body>
+    <div class="page-wrapper">
     <!-- 공통 헤더 -->
-    <header>
-        <div id="header">
-            <div id="logo">
-                <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag" onclick="location.href='{% url 'post_list' %}'">
-            </div>
-            <div class="menu">
-                {% if user.is_authenticated %}
-                    <!-- 로그인된 사용자 메뉴 -->
-                    <div id="user" class="dropdown">
-                        <img src="{% static 'blog/images/user.png' %}" alt="내 정보" onclick="toggleUserMenu()">
-                        <div id="user-dropdown" class="dropdown-content">
-                            <span class="user-name">{{ user.nickname }}님</span>
-                            <a href="{% url 'user_profile' %}">내 정보</a>
-                            <hr style="margin: 5px 0; border: none; border-top: 1px solid #eee;">
-                            
-                            <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                                {% csrf_token %}
-                                <button type="submit" class="logout-btn" onclick="return confirmLogout()">
-                                    로그아웃
-                                </button>
-                            </form>
+        <header>
+            <div id="header">
+                <div id="logo">
+                    <img src="{% static 'blog/images/logo.png' %}" alt="RhythmTag" onclick="location.href='{% url 'post_list' %}'">
+                </div>
+                <div class="menu">
+                    {% if user.is_authenticated %}
+                        <!-- 로그인된 사용자 메뉴 -->
+                        <div id="user" class="dropdown">
+                            <img src="{% static 'blog/images/user.png' %}" alt="내 정보" onclick="toggleUserMenu()">
+                            <div id="user-dropdown" class="dropdown-content">
+                                <span class="user-name">{{ user.nickname }}님</span>
+                                <a href="{% url 'user_profile' %}">내 정보</a>
+                                <hr style="margin: 5px 0; border: none; border-top: 1px solid #eee;">
+                                
+                                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="logout-btn" onclick="return confirmLogout()">
+                                        로그아웃
+                                    </button>
+                                </form>
+                            </div>
                         </div>
+                    {% else %}
+                    <!-- 비로그인 사용자 -->
+                    <div id="user">
+                        <img src="{% static 'blog/images/user.png' %}" alt="로그인" onclick="location.href='{% url 'login' %}'">
                     </div>
-                {% else %}
-                <!-- 비로그인 사용자 -->
-                <div id="user">
-                    <img src="{% static 'blog/images/user.png' %}" alt="로그인" onclick="location.href='{% url 'login' %}'">
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
-        </div>
-        <hr>
-    </header>
+            <hr>
+        </header>
 
-    <!-- 메시지 표시 -->
-    {% if messages %}
-        <div id="messages">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
+        <!-- 메시지 표시 -->
+        {% if messages %}
+            <div id="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- 각 페이지별 내용 -->
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <!-- footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="{% static 'blog/images/logo_r.png' %}" alt="RhythmTag">
+                        <span class="footer-brand">RhythmTag</span>
+                    </div>
+                    <p class="footer-description">
+                        음악과 함께하는 블로그 플랫폼<br>
+                        당신의 음악 이야기를 공유하세요
+                    </p>
                 </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <!-- 각 페이지별 내용 -->
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2025 RhythmTag. All rights reserved.</p>
+                    <p class="footer-version">v1.0.0</p>
+                </div>
+            </div>
+        </footer>
+    </div>
 
     <!-- 수정: extra_js 블록을 </body> 태그 앞으로 이동 -->
     {% block extra_js %}

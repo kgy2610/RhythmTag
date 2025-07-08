@@ -129,3 +129,39 @@ class CustomUserCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+    
+# 회원 탈퇴
+class AccountDeleteForm(forms.Form):
+    password = forms.CharField(
+        label='현재 비밀번호',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': '현재 비밀번호를 입력하세요',
+            'id': 'password-input'
+        }),
+        help_text='계정 삭제를 위해 현재 비밀번호를 입력해주세요.'
+    )
+    
+    confirm_delete = forms.BooleanField(
+        label='위 내용을 모두 확인했으며, 회원탈퇴에 동의합니다.',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'confirm-checkbox'
+        }),
+        required=True,
+        error_messages={
+            'required': '회원 탈퇴에 동의해주세요.'
+        }
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+    
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            # 현재 사용자의 비밀번호가 맞는지 확인
+            if not authenticate(userid=self.user.userid, password=password):
+                raise forms.ValidationError('현재 비밀번호가 올바르지 않습니다.')
+        return password
